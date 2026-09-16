@@ -1,0 +1,3025 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Jogo de investigação criminal para aprender SQL: dez casos, do SELECT às funções de janela, com SQLite real rodando no navegador.">
+<meta name="theme-color" content="#0B0E14">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Delegacia de Dados">
+<meta property="og:description" content="Jogo de investigação criminal para aprender SQL: dez casos, do SELECT às funções de janela, com SQLite real rodando no navegador.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M16 2 4 6v10c0 7.2 5 12.6 12 14 7-1.4 12-6.8 12-14V6L16 2Z' fill='%23141A25' stroke='%23F2B02E' stroke-width='1.6'/><circle cx='14.6' cy='14.4' r='4.6' fill='none' stroke='%235BC8DE' stroke-width='1.6'/><path d='m18.2 18 4.2 4.4' stroke='%235BC8DE' stroke-width='1.8' stroke-linecap='round'/></svg>">
+<style>html{color-scheme:dark}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Delegacia de Dados</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Libre+Franklin:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --breu:#0B0E14;
+  --dossie:#141A25;
+  --dossie-alto:#1C2432;
+  --risco:#2B3547;
+  --risco-claro:#3A465C;
+  --giz:#E4E9F1;
+  --giz-fraco:#8B99AE;
+  --giz-tenue:#5F6C81;
+  --ambar:#F2B02E;
+  --ambar-escuro:#C98C15;
+  --vermelho:#DE4B44;
+  --verde:#3FBF8F;
+  --ciano:#5BC8DE;
+  --papel:#E9DCBE;
+  --papel-arte:#E5D9BC;
+  --grafite:#2E2B25;
+  --sombra:0 18px 40px -22px rgba(0,0,0,.9);
+  --raio:14px;
+  --f-display:"Oswald","Arial Narrow",system-ui,sans-serif;
+  --f-corpo:"Libre Franklin",system-ui,-apple-system,Segoe UI,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--breu);color:var(--giz);
+  font-family:var(--f-corpo);font-size:15px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(900px 500px at 12% -6%, rgba(242,176,46,.07), transparent 62%),
+    radial-gradient(760px 480px at 92% 4%, rgba(91,200,222,.06), transparent 60%);
+  background-attachment:fixed;
+}
+h1,h2,h3,h4{margin:0;font-family:var(--f-display);font-weight:600;letter-spacing:.01em;text-wrap:balance}
+p{margin:0}
+button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
+code{font-family:var(--f-mono);font-size:.88em;background:rgba(91,200,222,.1);color:var(--ciano);padding:1px 5px;border-radius:4px}
+b,strong{font-weight:600;color:#F3F6FA}
+:focus-visible{outline:2px solid var(--ambar);outline-offset:3px;border-radius:6px}
+.rotulo{font-family:var(--f-display);font-size:11px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--giz-tenue)}
+
+/* ---------------- barra superior ---------------- */
+#barra{
+  position:sticky;top:env(safe-area-inset-top,0px);z-index:40;
+  background:rgba(11,14,20,.92);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--risco);
+}
+.barra-in{max-width:1160px;margin:0 auto;padding:10px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brasao{display:flex;align-items:center;gap:10px;margin-right:auto;min-width:0}
+.brasao svg{flex:none}
+.brasao-txt{min-width:0}
+.brasao-txt h1{font-size:19px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;line-height:1.1;white-space:nowrap}
+.brasao-txt span{font-family:var(--f-mono);font-size:10px;color:var(--giz-tenue);letter-spacing:.1em}
+.medidor{display:flex;align-items:center;gap:6px;padding:5px 11px;border:1px solid var(--risco);border-radius:999px;background:var(--dossie);white-space:nowrap}
+.medidor .v{font-family:var(--f-mono);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.medidor.xp .v{color:var(--ambar)}
+.medidor.ofensiva .v{color:var(--vermelho)}
+.patente{font-family:var(--f-display);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--papel);border-left:1px solid var(--risco);padding-left:14px}
+
+/* ---------------- estrutura ---------------- */
+.envelope{max-width:1160px;margin:0 auto;padding-inline:18px;padding-block:30px 72px}
+.tela[hidden]{display:none!important}
+
+/* ---------------- trilha ---------------- */
+.abertura{margin-bottom:34px;max-width:62ch}
+.abertura h2{font-size:clamp(28px,5vw,42px);font-weight:700;letter-spacing:.02em;text-transform:uppercase;line-height:1.05}
+.abertura h2 em{font-style:normal;color:var(--ambar)}
+.abertura p{color:var(--giz-fraco);margin-top:10px}
+.abertura .selo{display:inline-block;font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ambar);border:1px dashed var(--ambar-escuro);padding:4px 10px;border-radius:4px;margin-bottom:14px}
+
+#secoes{max-width:660px;margin:0 auto}
+.secao{position:relative;margin-bottom:8px}
+.faixa{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;padding:16px 18px;border-radius:10px;margin-bottom:6px;border-left:4px solid var(--nivel-cor)}
+.faixa h3{font-size:19px;text-transform:uppercase;letter-spacing:.1em;color:var(--nivel-cor)}
+.faixa p{font-size:13px;color:var(--giz-fraco)}
+.secao[data-nivel=facil]{--nivel-cor:var(--verde)}
+.secao[data-nivel=medio]{--nivel-cor:var(--ambar)}
+.secao[data-nivel=dificil]{--nivel-cor:var(--vermelho)}
+.faixa{background:linear-gradient(90deg,color-mix(in srgb,var(--nivel-cor) 12%,transparent),transparent 70%)}
+
+.trilha{list-style:none;margin:0;padding:22px 0 30px;position:relative;display:flex;flex-direction:column;align-items:center;gap:26px}
+.trilha::before{content:"";position:absolute;top:0;bottom:0;left:50%;width:0;border-left:2px dashed rgba(222,75,68,.4);transform:translateX(-1px)}
+.no{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:8px;width:190px;text-align:center}
+.no-titulo,.no-sub,.estrelas{background:var(--breu);padding:1px 8px;border-radius:6px}
+.no:nth-child(4n+1){transform:translateX(-64px)}
+.no:nth-child(4n+3){transform:translateX(64px)}
+.no-btn{
+  width:78px;height:78px;border-radius:50%;display:grid;place-items:center;position:relative;
+  background:var(--dossie-alto);border:2px solid var(--risco-claro);
+  box-shadow:0 6px 0 rgba(0,0,0,.45);transition:transform .12s ease,box-shadow .12s ease;
+}
+.no-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 0 rgba(0,0,0,.5)}
+.no-btn:active:not(:disabled){transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.45)}
+.no-num{font-family:var(--f-display);font-size:26px;font-weight:700;color:var(--giz-fraco)}
+.no.liberado .no-btn{background:radial-gradient(circle at 50% 30%,#2A3346,#171E2A);border-color:var(--ambar);box-shadow:0 6px 0 var(--ambar-escuro)}
+.no.liberado .no-num{color:var(--ambar)}
+.no.liberado .no-btn::after{content:"";position:absolute;inset:-7px;border-radius:50%;border:2px solid rgba(242,176,46,.45);animation:pulso 2.4s ease-out infinite}
+.no.concluido .no-btn{background:radial-gradient(circle at 50% 30%,#1E3A31,#14251F);border-color:var(--verde);box-shadow:0 6px 0 #1E6E52}
+.no.concluido .no-num{color:var(--verde)}
+.no.trancado .no-btn{cursor:not-allowed;opacity:.55}
+.no-titulo{font-family:var(--f-display);font-size:14px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;line-height:1.25}
+.no.trancado .no-titulo{color:var(--giz-tenue)}
+.no-sub{font-size:11.5px;color:var(--giz-tenue);line-height:1.35}
+.estrelas{display:flex;gap:3px;justify-content:center;font-size:13px;color:var(--risco-claro);letter-spacing:1px}
+.estrelas .on{color:var(--ambar)}
+@keyframes pulso{0%{transform:scale(1);opacity:.7}70%{transform:scale(1.22);opacity:0}100%{opacity:0}}
+
+/* ---------------- tela de caso ---------------- */
+#topo-caso{display:flex;align-items:center;gap:14px;margin-bottom:20px;flex-wrap:wrap}
+.btn-sair{width:36px;height:36px;border-radius:9px;border:1px solid var(--risco);display:grid;place-items:center;color:var(--giz-fraco);flex:none}
+.btn-sair:hover{color:var(--vermelho);border-color:var(--vermelho)}
+.progresso{flex:1;display:flex;gap:5px;min-width:130px}
+.progresso i{flex:1;height:9px;border-radius:999px;background:var(--dossie-alto);border:1px solid var(--risco)}
+.progresso i.feito{background:var(--verde);border-color:var(--verde)}
+.progresso i.atual{background:var(--ambar);border-color:var(--ambar)}
+.vidas{display:flex;gap:4px;flex:none}
+.vidas svg{width:19px;height:19px}
+.vidas .vazio{opacity:.22}
+.vidas.tremendo{animation:tremer .42s}
+@keyframes tremer{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+
+.abas{display:flex;gap:6px;margin-bottom:12px;border-bottom:1px solid var(--risco);padding-bottom:0}
+.aba{font-family:var(--f-display);font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--giz-tenue);padding:9px 13px;border-bottom:2px solid transparent;margin-bottom:-1px}
+.aba[aria-selected=true]{color:var(--ambar);border-bottom-color:var(--ambar)}
+#abas-mobile{display:none}
+
+.grade-caso{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:22px;align-items:start}
+.painel{background:var(--dossie);border:1px solid var(--risco);border-radius:var(--raio);box-shadow:var(--sombra)}
+.painel-corpo{padding:18px}
+
+/* dossiê */
+.dossie-cab{padding:18px 18px 14px;border-bottom:1px dashed var(--risco);background:linear-gradient(180deg,rgba(233,220,190,.06),transparent)}
+.dossie-cab .rotulo{color:var(--ambar)}
+.dossie-cab h2{font-size:22px;text-transform:uppercase;letter-spacing:.04em;margin-top:4px}
+.dossie-cab .local{font-family:var(--f-mono);font-size:11.5px;color:var(--giz-fraco);margin-top:6px}
+.briefing{font-size:14px;color:#CBD4E1}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.chip{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.04em;padding:3px 8px;border-radius:999px;border:1px solid var(--risco-claro);color:var(--giz-fraco)}
+.sub-titulo{font-family:var(--f-display);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--giz-tenue);margin:20px 0 10px;display:flex;align-items:center;gap:10px}
+.sub-titulo::after{content:"";flex:1;height:1px;background:var(--risco)}
+.suspeito{display:flex;gap:11px;padding:10px 0;border-top:1px solid rgba(43,53,71,.6)}
+.suspeito .ini{width:34px;height:34px;border-radius:8px;flex:none;display:grid;place-items:center;background:var(--dossie-alto);border:1px solid var(--risco-claro);font-family:var(--f-display);font-size:14px;color:var(--papel)}
+.suspeito h4{font-size:14px;font-family:var(--f-corpo);font-weight:600}
+.suspeito .papel{font-size:11.5px;color:var(--ambar);font-family:var(--f-mono)}
+.suspeito .nota{font-size:12.5px;color:var(--giz-fraco);margin-top:2px}
+
+/* explorador de tabelas */
+.lista-tabelas{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.tab-btn{font-family:var(--f-mono);font-size:12px;padding:5px 10px;border-radius:7px;border:1px solid var(--risco);color:var(--giz-fraco);background:var(--dossie-alto)}
+.tab-btn[aria-pressed=true]{border-color:var(--ciano);color:var(--ciano);background:rgba(91,200,222,.1)}
+.colunas{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+.col-pill{font-family:var(--f-mono);font-size:11px;padding:3px 7px;border-radius:5px;background:var(--dossie-alto);border:1px solid var(--risco);color:var(--giz)}
+.col-pill em{font-style:normal;color:var(--giz-tenue);margin-left:5px;font-size:10px}
+.dica-inserir{font-size:12px;color:var(--giz-tenue);margin-top:10px}
+.link{color:var(--ciano);text-decoration:underline;text-underline-offset:2px;background:none;padding:0}
+
+/* pista */
+.pista-cab{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.pista-cab .n{font-family:var(--f-display);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ambar)}
+.pista-cab h3{font-size:20px;text-transform:uppercase;letter-spacing:.03em}
+.enunciado{font-size:15px;color:#D2DAE6}
+.editor-caixa{margin-top:16px;border:1px solid var(--risco);border-radius:11px;overflow:hidden;background:#0D121A}
+.editor-cab{display:flex;align-items:center;gap:8px;padding:7px 12px;background:var(--dossie-alto);border-bottom:1px solid var(--risco)}
+.editor-cab .rotulo{color:var(--ciano)}
+.editor-cab .atalho{margin-left:auto;font-family:var(--f-mono);font-size:10.5px;color:var(--giz-tenue)}
+#editor{
+  display:block;width:100%;min-height:158px;resize:vertical;padding:14px;
+  background:transparent;color:#DCE6F2;border:none;
+  font-family:var(--f-mono);font-size:13.5px;line-height:1.65;tab-size:2;
+}
+#editor:focus{outline:none}
+#editor::placeholder{color:var(--giz-tenue)}
+.acoes{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.btn{font-family:var(--f-display);font-size:14px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:11px 20px;border-radius:10px;transition:transform .1s ease}
+.btn:active{transform:translateY(2px)}
+.btn-primario{background:var(--ambar);color:#1A1205;box-shadow:0 4px 0 var(--ambar-escuro)}
+.btn-primario:active{box-shadow:0 1px 0 var(--ambar-escuro)}
+.btn-verde{background:var(--verde);color:#062018;box-shadow:0 4px 0 #1E6E52}
+.btn-verde:active{box-shadow:0 1px 0 #1E6E52}
+.btn-fantasma{border:1px solid var(--risco-claro);color:var(--giz-fraco)}
+.btn-fantasma:hover{border-color:var(--ambar);color:var(--ambar)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+.aviso{margin-top:16px;padding:14px 16px;border-radius:11px;border:1px solid;display:flex;gap:12px;align-items:flex-start}
+.aviso svg{flex:none;margin-top:2px}
+.aviso h4{font-size:14px;font-family:var(--f-corpo);font-weight:600;margin-bottom:3px}
+.aviso p{font-size:13.5px}
+.aviso.ok{border-color:var(--verde);background:rgba(63,191,143,.1);color:#B6EAD6}
+.aviso.ok h4{color:var(--verde)}
+.aviso.erro{border-color:var(--vermelho);background:rgba(222,75,68,.1);color:#F2C7C5}
+.aviso.erro h4{color:var(--vermelho)}
+.aviso.neutro{border-color:var(--risco-claro);background:var(--dossie-alto);color:var(--giz-fraco)}
+.aviso.neutro h4{color:var(--ciano)}
+.aviso.dica{border-color:var(--ambar-escuro);background:rgba(242,176,46,.09);color:#EBD9B4}
+.aviso.dica h4{color:var(--ambar)}
+.aviso code{background:rgba(0,0,0,.35)}
+
+.tabela-envolve{margin-top:14px;overflow-x:auto;border:1px solid var(--risco);border-radius:10px}
+table.dados{border-collapse:collapse;width:100%;font-family:var(--f-mono);font-size:12.5px;font-variant-numeric:tabular-nums}
+table.dados th{text-align:left;padding:8px 12px;background:var(--dossie-alto);color:var(--ciano);font-weight:500;white-space:nowrap;border-bottom:1px solid var(--risco)}
+table.dados td{padding:7px 12px;border-bottom:1px solid rgba(43,53,71,.55);white-space:nowrap;color:#CFD8E4}
+table.dados tr:last-child td{border-bottom:none}
+table.dados td.nulo{color:var(--giz-tenue);font-style:italic}
+.contagem{font-family:var(--f-mono);font-size:11.5px;color:var(--giz-tenue);margin-top:8px}
+
+/* ---------------- acusação ---------------- */
+.acusacao{max-width:780px;margin:0 auto;text-align:center}
+.acusacao h2{font-size:clamp(24px,4.5vw,34px);text-transform:uppercase;letter-spacing:.04em}
+.acusacao>p{color:var(--giz-fraco);margin-top:8px}
+.cartas{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px;margin-top:26px;text-align:left}
+.carta{display:flex;flex-direction:column}
+.carta{padding:16px;border-radius:12px;border:1px solid var(--risco);background:var(--dossie);transition:border-color .15s,transform .12s}
+.carta:hover{border-color:var(--ambar);transform:translateY(-2px)}
+.carta[aria-pressed=true]{border-color:var(--ambar);background:rgba(242,176,46,.1)}
+.carta .ini{width:40px;height:40px;border-radius:9px;display:grid;place-items:center;background:var(--dossie-alto);border:1px solid var(--risco-claro);font-family:var(--f-display);font-size:16px;color:var(--papel);margin-bottom:10px}
+.carta h4{font-size:15px;font-family:var(--f-corpo);font-weight:600}
+.carta .papel{font-family:var(--f-mono);font-size:11px;color:var(--ambar);margin-top:2px}
+.carta .nota{font-size:12.5px;color:var(--giz-fraco);margin-top:7px}
+
+/* ---------------- resultado ---------------- */
+.resultado{max-width:640px;margin:0 auto;text-align:center}
+.selo-grande{width:96px;height:96px;margin:0 auto 18px;border-radius:50%;display:grid;place-items:center;border:3px solid var(--verde);background:rgba(63,191,143,.1)}
+.selo-grande.falha{border-color:var(--vermelho);background:rgba(222,75,68,.1)}
+.resultado h2{font-size:clamp(24px,5vw,34px);text-transform:uppercase;letter-spacing:.05em}
+.resultado .estrelas{font-size:30px;margin:14px 0}
+.desfecho{margin:20px 0;padding:18px;border-radius:12px;border:1px solid var(--risco);border-left:3px solid var(--ambar);background:var(--dossie);text-align:left;font-size:14.5px;color:#CBD4E1}
+.placar{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:22px 0}
+.placar>div{padding:14px 8px;border-radius:11px;background:var(--dossie);border:1px solid var(--risco)}
+.placar .v{font-family:var(--f-display);font-size:26px;font-weight:700;color:var(--ambar);font-variant-numeric:tabular-nums;line-height:1}
+.placar .r{font-family:var(--f-display);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--giz-tenue);margin-top:5px}
+
+/* ---------------- carregando / rodapé ---------------- */
+#carregando{position:fixed;inset:0;z-index:90;display:grid;place-items:center;background:var(--breu);text-align:center;padding:24px}
+#carregando .rotulo{margin-top:14px;color:var(--ambar)}
+#carregando .sub{font-size:13px;color:var(--giz-tenue);margin-top:6px;max-width:34ch}
+.girando{animation:girar 1.4s linear infinite;transform-origin:50% 50%}
+@keyframes girar{to{transform:rotate(360deg)}}
+.rodape{margin-top:46px;padding-top:18px;border-top:1px solid var(--risco);font-size:12.5px;color:var(--giz-tenue);display:flex;gap:14px;flex-wrap:wrap;justify-content:space-between}
+.rodape button{font-size:12.5px}
+
+.ajuda{margin-top:16px}
+.ajuda summary{cursor:pointer;font-family:var(--f-display);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--giz-tenue);list-style:none}
+.ajuda summary::-webkit-details-marker{display:none}
+.ajuda summary::before{content:"▸ ";color:var(--ambar)}
+.ajuda[open] summary::before{content:"▾ "}
+.ajuda-corpo{margin-top:12px;font-size:13px;color:var(--giz-fraco);display:grid;gap:7px}
+.ajuda-corpo b{color:var(--ciano);font-family:var(--f-mono);font-size:12px;font-weight:500}
+
+/* ---------------- arte: retratos e provas ---------------- */
+.retrato{display:block;width:100%;height:auto}
+.mini{flex:none;border-radius:4px;overflow:hidden;border:1px solid var(--risco-claro);background:var(--papel-arte);box-shadow:0 3px 8px -3px rgba(0,0,0,.7)}
+.suspeito .mini{width:46px;height:58px}
+.carta .mini{width:78px;height:99px;border-radius:6px;margin-bottom:11px;box-shadow:0 6px 16px -8px rgba(0,0,0,.85)}
+.prova{display:block;width:100%;height:auto;max-width:290px;margin:0 auto}
+.prova-caixa{margin-top:16px;padding:14px 12px 10px;border:1px dashed var(--risco-claro);border-radius:11px;background:rgba(0,0,0,.2)}
+.prova-caixa figcaption{font-family:var(--f-mono);font-size:10.5px;color:var(--giz-tenue);text-align:center;margin-top:8px}
+
+/* ---------------- carimbo e feedback ---------------- */
+#bloco-pista{position:relative;overflow:hidden}
+.carimbo{
+  position:absolute;top:44%;left:50%;z-index:5;pointer-events:none;white-space:nowrap;
+  font-family:var(--f-display);font-size:clamp(30px,6.5vw,54px);font-weight:700;letter-spacing:.14em;
+  padding:8px 24px;border:5px solid var(--verde);color:var(--verde);border-radius:8px;
+  background:rgba(11,14,20,.6);animation:bater 1.4s cubic-bezier(.2,.9,.3,1.1) forwards;
+}
+.carimbo.erro{border-color:var(--vermelho);color:var(--vermelho)}
+@keyframes bater{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(3) rotate(-24deg)}
+  20%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(-9deg)}
+  28%{transform:translate(-50%,-50%) scale(1.07) rotate(-9deg)}
+  36%{transform:translate(-50%,-50%) scale(1) rotate(-9deg)}
+  76%{opacity:1}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1) rotate(-9deg)}
+}
+.vidas .perdido{animation:partir .6s ease forwards}
+@keyframes partir{0%{transform:scale(1)}28%{transform:scale(1.38)}100%{transform:scale(.55) rotate(20deg);opacity:.2}}
+.resultado .estrelas span{display:inline-block;animation:cair .5s cubic-bezier(.2,.9,.3,1.4) both}
+.resultado .estrelas span:nth-child(2){animation-delay:.15s}
+.resultado .estrelas span:nth-child(3){animation-delay:.3s}
+@keyframes cair{from{opacity:0;transform:translateY(-30px) scale(1.8) rotate(-30deg)}to{opacity:1;transform:none}}
+.trilha::before{animation:desenharLinha 1.2s ease-out both}
+@keyframes desenharLinha{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0)}}
+.culpado{display:flex;gap:16px;align-items:center;justify-content:center;margin:20px 0 6px}
+.culpado .mini{width:98px;height:124px;border-color:var(--vermelho);border-width:2px}
+.culpado-selo{font-family:var(--f-display);font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--vermelho);border:2px solid var(--vermelho);padding:5px 11px;border-radius:5px;rotate:-6deg}
+
+/* ---------------- cena de abertura ---------------- */
+.cena{max-width:880px;margin:0 auto}
+.cena-quadro{position:relative;border-radius:16px;padding:22px 16px 24px;border:1px solid var(--risco);overflow:hidden;box-shadow:var(--sombra);
+  background:radial-gradient(130% 90% at 50% -10%,rgba(233,220,190,.08),transparent 62%),linear-gradient(180deg,#171C24,#10141B)}
+.cena-linha{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.cena-linha path{stroke-dasharray:1;stroke-dashoffset:1;animation:linhar 1.6s ease-out .85s forwards}
+@keyframes linhar{to{stroke-dashoffset:0}}
+.cena-fichas{position:relative;z-index:1;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.cena-ficha{margin:0;position:relative;animation:fixar .55s cubic-bezier(.2,.9,.3,1.3) both;animation-delay:calc(var(--i)*.18s + .12s)}
+.cena-ficha:nth-child(1){rotate:-2.4deg}
+.cena-ficha:nth-child(2){rotate:1.8deg}
+.cena-ficha:nth-child(3){rotate:-1.3deg}
+.cena-ficha:nth-child(4){rotate:2.4deg}
+.cena-ficha .retrato{border:1px solid rgba(46,43,37,.35);border-radius:3px;box-shadow:0 10px 20px -10px rgba(0,0,0,.95)}
+.cena-ficha figcaption{font-family:var(--f-display);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--giz-fraco);text-align:center;margin-top:6px}
+.alfinete{position:absolute;top:-5px;left:50%;translate:-50% 0;z-index:2;width:11px;height:11px;border-radius:50%;background:var(--vermelho);box-shadow:0 2px 5px rgba(0,0,0,.8),inset 0 -2px 2px rgba(0,0,0,.4)}
+@keyframes fixar{from{opacity:0;transform:translateY(-28px) scale(.88)}to{opacity:1;transform:none}}
+.cena-prova{position:relative;z-index:1;margin:20px 0 0;text-align:center;animation:surgir .7s ease both;animation-delay:1.5s}
+.cena-prova .prova{max-width:250px}
+.cena-prova figcaption{font-family:var(--f-mono);font-size:10.5px;color:var(--giz-tenue);margin-top:4px}
+@keyframes surgir{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.cena-texto{margin-top:26px;max-width:64ch}
+.cena-texto .rotulo{color:var(--ambar);animation:surgir .5s ease both;animation-delay:.3s}
+.cena-texto h2{font-size:clamp(26px,5vw,38px);text-transform:uppercase;letter-spacing:.03em;margin-top:5px;animation:surgir .6s ease both;animation-delay:.45s}
+.cena-texto .local{font-family:var(--f-mono);font-size:12px;color:var(--giz-fraco);margin-top:7px;animation:surgir .6s ease both;animation-delay:.65s}
+.cena-briefing{margin-top:15px;font-size:15px;color:#CBD4E1;animation:surgir .7s ease both;animation-delay:.9s}
+.cena-acoes{margin-top:26px;animation:surgir .6s ease both;animation-delay:1.25s}
+.medidor.botao{cursor:pointer}
+.medidor.botao[aria-pressed=false]{opacity:.45}
+.medidor.botao .v{font-family:var(--f-display);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ciano)}
+.painel-voz{position:absolute;top:calc(100% + 8px);right:18px;z-index:60;width:min(330px,calc(100vw - 32px));
+  background:var(--dossie);border:1px solid var(--risco);border-radius:12px;padding:15px;box-shadow:0 24px 46px -18px #000;display:grid;gap:13px}
+.linha-voz{display:flex;align-items:center;gap:9px;font-size:13.5px;cursor:pointer}
+.linha-voz.col{display:grid;gap:6px;cursor:default}
+.linha-voz .rotulo{display:flex;justify-content:space-between;align-items:baseline}
+.linha-voz .rotulo b{font-family:var(--f-mono);font-size:11px;color:var(--ambar);letter-spacing:0}
+.painel-voz select,.painel-voz input[type=range]{width:100%}
+.painel-voz select{background:var(--dossie-alto);color:var(--giz);border:1px solid var(--risco);border-radius:8px;padding:7px 9px;font-family:var(--f-mono);font-size:12px}
+.painel-voz input[type=range]{accent-color:var(--ambar)}
+.painel-voz input[type=checkbox]{accent-color:var(--ambar);width:16px;height:16px;flex:none}
+.nota-voz{font-size:11.5px;color:var(--giz-tenue);line-height:1.5}
+.nota-voz b{color:var(--ciano);font-weight:500}
+.btn-ouvir{font-family:var(--f-display);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ciano);border:1px solid var(--risco-claro);border-radius:7px;padding:4px 10px;margin-left:auto}
+.btn-ouvir:hover{border-color:var(--ciano)}
+
+@media (max-width:879px){
+  .cena-fichas{gap:6px}
+  .cena-quadro{padding:18px 12px 20px}
+  .carta .mini{width:66px;height:84px}
+  .grade-caso{grid-template-columns:1fr}
+  #abas-mobile{display:flex}
+  #abas-desktop{display:none}
+  .no:nth-child(4n+1){transform:translateX(-46px)}
+  .no:nth-child(4n+3){transform:translateX(46px)}
+  .no{width:150px}
+  .placar{grid-template-columns:1fr;gap:8px}
+  .barra-in{gap:9px;padding:9px 16px}
+  .patente{display:none}
+  .envelope{padding-inline:16px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+}
+</style>
+
+</head>
+<body>
+<div id="carregando">
+  <div>
+    <svg width="46" height="46" viewBox="0 0 46 46" fill="none" class="girando" aria-hidden="true">
+      <circle cx="23" cy="23" r="20" stroke="#2B3547" stroke-width="3"/>
+      <path d="M43 23a20 20 0 0 0-20-20" stroke="#F2B02E" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+    <div class="rotulo">Abrindo o arquivo morto</div>
+    <p class="sub">Carregando o banco de dados da perícia (roda inteiro no seu navegador).</p>
+  </div>
+</div>
+
+<header id="barra">
+  <div class="barra-in">
+    <div class="brasao">
+      <svg width="30" height="30" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <path d="M16 2 4 6v10c0 7.2 5 12.6 12 14 7-1.4 12-6.8 12-14V6L16 2Z" fill="#141A25" stroke="#F2B02E" stroke-width="1.6"/>
+        <circle cx="14.6" cy="14.4" r="4.6" stroke="#5BC8DE" stroke-width="1.6"/>
+        <path d="m18.2 18 4.2 4.4" stroke="#5BC8DE" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <div class="brasao-txt">
+        <h1>Delegacia de Dados</h1>
+        <span>DIVISÃO DE CONSULTAS · SQL</span>
+      </div>
+    </div>
+    <div class="medidor xp" title="Experiência acumulada">
+      <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1 10 6l5 .4-3.8 3.3 1.2 4.9L8 12l-4.4 2.6 1.2-4.9L1 6.4 6 6 8 1Z" fill="#F2B02E"/></svg>
+      <span class="v" id="v-xp">0</span>
+    </div>
+    <div class="medidor ofensiva" title="Dias seguidos investigando">
+      <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1s1 3-1 5C4.5 8.5 4 10 4 11a4 4 0 1 0 8 0c0-2-1.5-3.5-2-5.5C9.5 7 9 7.5 8 8c.8-2.5.5-5 0-7Z" fill="#DE4B44"/></svg>
+      <span class="v" id="v-ofensiva">0</span>
+    </div>
+    <button class="medidor botao" id="btn-voz" aria-pressed="true" title="Ligar ou desligar a narração">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M8 2 4.5 5H2v6h2.5L8 14V2Z" fill="#5BC8DE"/>
+        <path d="M10.8 5.4a3.6 3.6 0 0 1 0 5.2M12.9 3.3a6.6 6.6 0 0 1 0 9.4" stroke="#5BC8DE" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+      <span class="v" id="v-voz">Voz</span>
+    </button>
+    <div class="patente" id="v-patente">Estagiário</div>
+  </div>
+  <div class="painel-voz" id="painel-voz" hidden>
+    <label class="linha-voz"><input type="checkbox" id="voz-ligada" checked><span>Narração ligada</span></label>
+    <label class="linha-voz col"><span class="rotulo">Voz do sistema</span>
+      <select id="sel-voz"></select></label>
+    <label class="linha-voz col"><span class="rotulo">Velocidade <b id="v-taxa">0.95×</b></span>
+      <input type="range" id="faixa-taxa" min="0.7" max="1.3" step="0.05" value="0.95"></label>
+    <p class="nota-voz">As vozes marcadas como <b>Natural</b>, <b>Neural</b> ou <b>online</b> são as boas — ficam no topo da lista. Se o site tiver os áudios gravados em <code>assets/audio</code>, eles tocam no lugar desta voz.</p>
+  </div>
+</header>
+
+<main class="envelope">
+  <!-- ============ TRILHA ============ -->
+  <section id="tela-trilha" class="tela">
+    <div class="abertura">
+      <div class="selo">Arquivo 01 · 10 casos abertos</div>
+      <h2>Dez crimes. <em>Um interrogatório só:</em> o banco de dados.</h2>
+      <p>Toda prova está em alguma tabela. Você escreve a consulta, o banco responde, e o culpado aparece. Sintaxe do <b>BigQuery</b> — do <code>SELECT</code> simples às funções de janela.</p>
+    </div>
+    <div id="secoes"></div>
+    <div class="rodape">
+      <span>Todos os casos são ficcionais — pessoas, empresas e endereços foram inventados. Tudo roda no seu navegador e o progresso fica salvo neste dispositivo.</span>
+      <button class="link" id="btn-zerar">Zerar progresso</button>
+    </div>
+  </section>
+
+  <!-- ============ CENA DE ABERTURA ============ -->
+  <section id="tela-cena" class="tela" hidden></section>
+
+  <!-- ============ CASO ============ -->
+  <section id="tela-caso" class="tela" hidden>
+    <div id="topo-caso">
+      <button class="btn-sair" id="btn-voltar" title="Voltar à trilha" aria-label="Voltar à trilha">
+        <svg width="17" height="17" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m3.5 3.5 9 9m0-9-9 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+      <div class="progresso" id="progresso"></div>
+      <div class="vidas" id="vidas"></div>
+    </div>
+
+    <div class="abas" id="abas-mobile" role="tablist">
+      <button class="aba" role="tab" data-alvo="pista">Pista</button>
+      <button class="aba" role="tab" data-alvo="tabelas">Tabelas</button>
+      <button class="aba" role="tab" data-alvo="dossie">Dossiê</button>
+    </div>
+
+    <div class="grade-caso">
+      <div>
+        <div class="abas" id="abas-desktop" role="tablist">
+          <button class="aba" role="tab" data-alvo="dossie">Dossiê</button>
+          <button class="aba" role="tab" data-alvo="tabelas">Tabelas</button>
+        </div>
+        <div class="painel" id="bloco-dossie"></div>
+        <div class="painel" id="bloco-tabelas"><div class="painel-corpo" id="tabelas-corpo"></div></div>
+      </div>
+      <div class="painel" id="bloco-pista"><div class="painel-corpo" id="pista-corpo"></div></div>
+    </div>
+  </section>
+
+  <!-- ============ ACUSAÇÃO ============ -->
+  <section id="tela-acusacao" class="tela" hidden>
+    <div class="acusacao">
+      <div class="rotulo">Hora do indiciamento</div>
+      <h2 id="acusacao-titulo">Quem levou a peça?</h2>
+      <p>As provas estão na mesa. Escolha um nome — errar custa um coração.</p>
+      <div class="cartas" id="cartas-suspeitos"></div>
+      <div class="acoes" style="justify-content:center;margin-top:24px">
+        <button class="btn btn-primario" id="btn-indiciar" disabled>Indiciar</button>
+      </div>
+      <div id="acusacao-aviso"></div>
+    </div>
+  </section>
+
+  <!-- ============ RESULTADO ============ -->
+  <section id="tela-resultado" class="tela" hidden>
+    <div class="resultado" id="resultado-corpo"></div>
+  </section>
+</main>
+
+<script src="vendor/sql-asm.js"></script>
+<script>
+/* ============================================================
+   MOTOR — tradução BigQuery → SQLite + comparação de resultados
+   ============================================================ */
+
+/* Localiza os argumentos de uma chamada de função a partir do '(' */
+function fatiarArgs(s, iAbre) {
+  let prof = 0, ini = iAbre + 1, args = [], aspas = null;
+  for (let j = iAbre; j < s.length; j++) {
+    const c = s[j];
+    if (aspas) { if (c === aspas) aspas = null; continue; }
+    if (c === "'" || c === '"' || c === '`') { aspas = c; continue; }
+    if (c === '(') { prof++; if (prof === 1) ini = j + 1; continue; }
+    if (c === ')') {
+      prof--;
+      if (prof === 0) { args.push(s.slice(ini, j)); return { args, fim: j }; }
+      continue;
+    }
+    if (c === ',' && prof === 1) { args.push(s.slice(ini, j)); ini = j + 1; }
+  }
+  return null;
+}
+
+function reescrever(sql, nome, montar) {
+  const re = new RegExp('(^|[^\\w.])' + nome + '\\s*\\(', 'ig');
+  let saida = sql, volta = 0;
+  while (volta++ < 300) {
+    re.lastIndex = 0;
+    const m = re.exec(saida);
+    if (!m) break;
+    const iNome = m.index + m[1].length;
+    const iAbre = m.index + m[0].length - 1;
+    const r = fatiarArgs(saida, iAbre);
+    if (!r) break;
+    let sub;
+    try { sub = montar(r.args.map(a => a.trim())); } catch (e) { sub = null; }
+    if (sub == null) break;
+    saida = saida.slice(0, iNome) + sub + saida.slice(r.fim + 1);
+  }
+  return saida;
+}
+
+/* Índice da primeira ocorrência de uma palavra-chave em profundidade zero */
+function indiceRaiz(s, palavra) {
+  const re = new RegExp('\\b' + palavra + '\\b', 'ig');
+  let prof = 0, aspas = null, m;
+  const marcas = [];
+  for (let j = 0; j < s.length; j++) {
+    const c = s[j];
+    if (aspas) { if (c === aspas) aspas = null; marcas[j] = -1; continue; }
+    if (c === "'" || c === '"' || c === '`') { aspas = c; marcas[j] = -1; continue; }
+    if (c === '(') prof++;
+    else if (c === ')') prof--;
+    marcas[j] = prof;
+  }
+  while ((m = re.exec(s))) { if (marcas[m.index] === 0) return m.index; }
+  return -1;
+}
+
+function separarRaiz(lista) {
+  const partes = []; let prof = 0, aspas = null, ini = 0;
+  for (let j = 0; j < lista.length; j++) {
+    const c = lista[j];
+    if (aspas) { if (c === aspas) aspas = null; continue; }
+    if (c === "'" || c === '"' || c === '`') { aspas = c; continue; }
+    if (c === '(') prof++;
+    else if (c === ')') prof--;
+    else if (c === ',' && prof === 0) { partes.push(lista.slice(ini, j)); ini = j + 1; }
+  }
+  partes.push(lista.slice(ini));
+  return partes.map(p => p.trim()).filter(Boolean);
+}
+
+const FATOR = { SECOND: 86400, MINUTE: 1440, HOUR: 24, DAY: 1 };
+const PEDACO = {
+  YEAR: '%Y', MONTH: '%m', DAY: '%d', HOUR: '%H', MINUTE: '%M',
+  SECOND: '%S', DAYOFYEAR: '%j', WEEK: '%W', ISOYEAR: '%Y', QUARTER: '%m'
+};
+
+/* QUALIFY (BigQuery) → subconsulta com WHERE */
+function traduzirQualify(sql) {
+  const iQ = indiceRaiz(sql, 'QUALIFY');
+  if (iQ < 0) return sql;
+  const cabeca = sql.slice(0, iQ).trim();
+  let cauda = sql.slice(iQ + 7);
+  let rabo = '';
+  const corte = Math.min(
+    ...['ORDER\\s+BY', 'LIMIT'].map(p => {
+      const i = indiceRaiz(cauda, p.replace('\\s+', ' ').split(' ')[0]);
+      return i < 0 ? Infinity : i;
+    })
+  );
+  if (corte !== Infinity) { rabo = ' ' + cauda.slice(corte); cauda = cauda.slice(0, corte); }
+  const cond = cauda.trim();
+
+  const iSel = indiceRaiz(cabeca, 'SELECT');
+  const iFrom = indiceRaiz(cabeca, 'FROM');
+  if (iSel < 0 || iFrom < 0) return sql;
+  let lista = cabeca.slice(iSel + 6, iFrom);
+  const distinto = /^\s*DISTINCT\b/i.test(lista);
+  if (distinto) lista = lista.replace(/^\s*DISTINCT\b/i, '');
+
+  const nomes = separarRaiz(lista).map(item => {
+    const apelido = item.match(/\sAS\s+([`"]?)([A-Za-z_]\w*)\1\s*$/i);
+    if (apelido) return '"' + apelido[2] + '"';
+    const simples = item.match(/^[`"]?([A-Za-z_]\w*)[`"]?(\.[`"]?([A-Za-z_]\w*)[`"]?)?$/);
+    if (simples) return '"' + (simples[3] || simples[1]) + '"';
+    if (item.trim() === '*') return '*';
+    return null;
+  });
+  if (nomes.some(n => n === null)) return sql;
+
+  const interna = cabeca.slice(0, iFrom) + ', (' + cond + ') AS __qualify ' + cabeca.slice(iFrom);
+  return 'SELECT ' + (distinto ? 'DISTINCT ' : '') + nomes.join(', ') +
+    ' FROM (' + interna + ') WHERE __qualify' + rabo;
+}
+
+/* Tradução principal */
+function paraSQLite(sql, dataset) {
+  let q = sql;
+
+  // 1. Crases do BigQuery: `projeto.dataset.tabela` → "tabela"
+  q = q.replace(/`([^`\n]+)`/g, (_, dentro) => '"' + dentro.split('.').pop().trim() + '"');
+
+  // 2. Prefixo do dataset sem crases
+  if (dataset) q = q.replace(new RegExp('\\b' + dataset + '\\s*\\.\\s*', 'ig'), '');
+
+  // 3. SAFE.FUNC → FUNC e operadores de conjunto do BigQuery
+  q = q.replace(/\bSAFE\s*\.\s*/ig, '');
+  q = q.replace(/\b(UNION|INTERSECT|EXCEPT)\s+DISTINCT\b/ig, '$1');
+
+  // 4. Tipos
+  q = q.replace(/\bINT64\b/ig, 'INTEGER').replace(/\bFLOAT64\b/ig, 'REAL')
+       .replace(/\bBIGNUMERIC\b/ig, 'REAL').replace(/\bNUMERIC\b/ig, 'REAL')
+       .replace(/\bAS\s+STRING\s*\)/ig, 'AS TEXT)').replace(/\bAS\s+BOOL\s*\)/ig, 'AS INTEGER)');
+  q = q.replace(/\bSAFE_CAST\b/ig, 'CAST');
+
+  // 5. Datas de "agora"
+  q = q.replace(/\bCURRENT_DATE\s*\(\s*\)/ig, "date('now')")
+       .replace(/\bCURRENT_DATETIME\s*\(\s*\)/ig, "datetime('now')")
+       .replace(/\bCURRENT_TIMESTAMP\s*\(\s*\)/ig, "datetime('now')")
+       .replace(/\bCURRENT_DATE\b(?!\s*\()/ig, "date('now')");
+
+  // 6. EXTRACT(parte FROM expr)
+  q = reescrever(q, 'EXTRACT', a => {
+    const bruto = a.join(',');
+    const p = bruto.split(/\sFROM\s/i);
+    if (p.length < 2) return null;
+    const parte = p[0].trim().toUpperCase();
+    const alvo = p.slice(1).join(' FROM ');
+    if (parte === 'DATE') return 'date(' + alvo + ')';
+    if (parte === 'TIME') return "strftime('%H:%M:%S'," + alvo + ')';
+    if (parte === 'DAYOFWEEK') return "(CAST(strftime('%w'," + alvo + ') AS INTEGER) + 1)';
+    if (parte === 'QUARTER') return "((CAST(strftime('%m'," + alvo + ') AS INTEGER) + 2) / 3)';
+    const f = PEDACO[parte];
+    if (!f) return null;
+    return "CAST(strftime('" + f + "'," + alvo + ') AS INTEGER)';
+  });
+
+  // 7. Diferenças de data/hora
+  const difData = a => {
+    if (a.length < 3) return null;
+    const u = a[2].trim().toUpperCase();
+    if (u === 'DAY') return '(CAST(julianday(date(' + a[0] + ')) - julianday(date(' + a[1] + ')) AS INTEGER))';
+    if (u === 'WEEK') return '(CAST((julianday(date(' + a[0] + ')) - julianday(date(' + a[1] + '))) / 7 AS INTEGER))';
+    if (u === 'MONTH') return "((CAST(strftime('%Y'," + a[0] + ") AS INTEGER)*12 + CAST(strftime('%m'," + a[0] + ") AS INTEGER)) - (CAST(strftime('%Y'," + a[1] + ") AS INTEGER)*12 + CAST(strftime('%m'," + a[1] + ') AS INTEGER)))';
+    if (u === 'YEAR') return "(CAST(strftime('%Y'," + a[0] + ") AS INTEGER) - CAST(strftime('%Y'," + a[1] + ') AS INTEGER))';
+    return null;
+  };
+  const difHora = a => {
+    if (a.length < 3) return null;
+    const k = FATOR[a[2].trim().toUpperCase()];
+    if (!k) return difData(a);
+    return '(CAST(ROUND((julianday(' + a[0] + ') - julianday(' + a[1] + ')) * ' + k + ') AS INTEGER))';
+  };
+  q = reescrever(q, 'DATE_DIFF', difData);
+  q = reescrever(q, 'TIMESTAMP_DIFF', difHora);
+  q = reescrever(q, 'DATETIME_DIFF', difHora);
+
+  // 8. DATE_ADD / DATE_SUB com INTERVAL
+  const desloca = (sinal, fn) => a => {
+    if (a.length < 2) return null;
+    const m = a[1].match(/INTERVAL\s+(.+?)\s+(\w+)\s*$/i);
+    if (!m) return null;
+    const unidade = m[2].toLowerCase().replace(/s$/, '');
+    return fn + '(' + a[0] + ", '" + sinal + "' || (" + m[1] + ") || ' " + unidade + "')";
+  };
+  q = reescrever(q, 'DATE_ADD', desloca('+', 'date'));
+  q = reescrever(q, 'DATETIME_ADD', desloca('+', 'datetime'));
+  q = reescrever(q, 'TIMESTAMP_ADD', desloca('+', 'datetime'));
+  q = reescrever(q, 'DATE_SUB', desloca('-', 'date'));
+  q = reescrever(q, 'DATETIME_SUB', desloca('-', 'datetime'));
+  q = reescrever(q, 'TIMESTAMP_SUB', desloca('-', 'datetime'));
+
+  // 9. Formatação de data
+  const formatar = a => a.length < 2 ? null : 'strftime(' + a[0] + ', ' + a[1] + ')';
+  q = reescrever(q, 'FORMAT_DATE', formatar);
+  q = reescrever(q, 'FORMAT_DATETIME', formatar);
+  q = reescrever(q, 'FORMAT_TIMESTAMP', formatar);
+  q = reescrever(q, 'PARSE_DATE', a => a.length < 2 ? null : 'date(' + a[1] + ')');
+  q = reescrever(q, 'DATE_TRUNC', a => {
+    const u = (a[1] || '').trim().toUpperCase();
+    if (u === 'MONTH') return "date(" + a[0] + ", 'start of month')";
+    if (u === 'YEAR') return "date(" + a[0] + ", 'start of year')";
+    if (u === 'DAY') return 'date(' + a[0] + ')';
+    if (u === 'WEEK') return "date(" + a[0] + ", 'weekday 0', '-6 days')";
+    return 'date(' + a[0] + ')';
+  });
+
+  // 10. Agregações e utilitários
+  q = reescrever(q, 'COUNTIF', a => 'SUM(CASE WHEN (' + a[0] + ') THEN 1 ELSE 0 END)');
+  q = reescrever(q, 'SAFE_DIVIDE', a => a.length < 2 ? null : '(CAST((' + a[0] + ') AS REAL) / NULLIF((' + a[1] + '), 0))');
+  q = reescrever(q, 'SAFE_MULTIPLY', a => '((' + a[0] + ') * (' + a[1] + '))');
+  q = reescrever(q, 'IEEE_DIVIDE', a => '(CAST((' + a[0] + ') AS REAL) / NULLIF((' + a[1] + '), 0))');
+  q = reescrever(q, 'STRING_AGG', a => 'group_concat(' + a[0] + (a[1] ? ', ' + a[1] : "") + ')');
+  q = reescrever(q, 'ARRAY_AGG', a => 'group_concat(' + a[0].replace(/\s+ORDER\s+BY[\s\S]*$/i, '') + ')');
+  q = reescrever(q, 'ARRAY_LENGTH', a => '(length(' + a[0] + ") - length(replace(" + a[0] + ", ',', '')) + 1)");
+  q = reescrever(q, 'LOGICAL_OR', a => 'MAX(CASE WHEN (' + a[0] + ') THEN 1 ELSE 0 END)');
+  q = reescrever(q, 'LOGICAL_AND', a => 'MIN(CASE WHEN (' + a[0] + ') THEN 1 ELSE 0 END)');
+  q = reescrever(q, 'APPROX_COUNT_DISTINCT', a => 'COUNT(DISTINCT ' + a[0] + ')');
+
+  // 11. Texto
+  q = reescrever(q, 'STARTS_WITH', a => '(instr(' + a[0] + ', ' + a[1] + ') = 1)');
+  q = reescrever(q, 'ENDS_WITH', a => '(substr(' + a[0] + ', -length(' + a[1] + ')) = ' + a[1] + ')');
+  q = reescrever(q, 'CONTAINS_SUBSTR', a => '(instr(lower(' + a[0] + '), lower(' + a[1] + ')) > 0)');
+  q = reescrever(q, 'REGEXP_CONTAINS', a => '(' + a[0] + " LIKE '%' || replace(" + a[1] + ", '.*', '%') || '%')");
+  q = reescrever(q, 'SPLIT', a => a[0]);
+  q = reescrever(q, 'GENERATE_UUID', () => "lower(hex(randomblob(16)))");
+
+  // 12. QUALIFY
+  q = traduzirQualify(q);
+
+  return q;
+}
+
+/* ---------- execução e comparação ---------- */
+
+function normalizarValor(v) {
+  if (v === null || v === undefined) return '␀';
+  if (typeof v === 'number') {
+    if (!isFinite(v)) return String(v);
+    return String(Math.round(v * 1e6) / 1e6);
+  }
+  if (v instanceof Uint8Array) return '[bin]';
+  return String(v).trim();
+}
+
+function chaveLinha(linha) { return linha.map(normalizarValor).join(''); }
+
+function compararResultados(obtido, esperado, ordenado) {
+  if (!obtido) return { ok: false, motivo: 'A consulta não devolveu nenhuma tabela. Toda pista precisa de um SELECT que retorne linhas.' };
+  const lo = obtido.values || [], le = esperado.values || [];
+  if (lo.length !== le.length) {
+    return { ok: false, motivo: 'Número de linhas diferente: sua consulta trouxe ' + lo.length + ' e a pista fecha com ' + le.length + '.' };
+  }
+  const co = (obtido.columns || []).length, ce = (esperado.columns || []).length;
+  if (co !== ce) {
+    return { ok: false, motivo: 'Número de colunas diferente: você trouxe ' + co + ' e a pista pede ' + ce + '.' };
+  }
+  const a = lo.map(chaveLinha), b = le.map(chaveLinha);
+  if (!ordenado) { a.sort(); b.sort(); }
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) {
+      return {
+        ok: false,
+        motivo: ordenado
+          ? 'Os valores batem parcialmente, mas a linha ' + (i + 1) + ' está diferente — confira também a ordenação.'
+          : 'Uma das linhas não confere. Revise os filtros e as colunas pedidas.'
+      };
+    }
+  }
+  return { ok: true };
+}
+
+
+/* ============================================================
+   CASOS — dossiês, bancos de dados e pistas
+   ============================================================ */
+
+const CASOS_BASE = [
+/* ---------------------------------------------------------------- CASO 1 */
+{
+  id: 'museu', nivel: 'facil', dataset: 'museu',
+  titulo: 'O Roubo da Sala 12',
+  local: 'Museu de Arte Municipal · 14 de março de 2026',
+  resumo: 'Uma peça sumiu de uma sala trancada. Quatro pessoas estavam no prédio.',
+  briefing: 'Às 6h da manhã a curadora encontrou o pedestal da Sala 12 vazio. As portas têm leitor de crachá e todo acesso vira uma linha na tabela <code>acessos</code>. O circuito de câmeras da Sala 12 ficou cego entre <b>22h20 e 22h45</b> — uma falha elétrica, segundo o registro de manutenção. Quem passou o crachá naquela janela levou a peça.',
+  conceitos: ['SELECT', 'WHERE', 'ORDER BY', 'DISTINCT', 'LIKE', 'BETWEEN', 'INNER JOIN'],
+  esquema: `
+CREATE TABLE funcionarios (id INTEGER, nome TEXT, cargo TEXT, setor TEXT, turno TEXT);
+INSERT INTO funcionarios VALUES
+ (1,'Heitor Vasques','Segurança','Ala Norte','noite'),
+ (2,'Marlene Prado','Curadora','Ala Sul','dia'),
+ (3,'Ivo Rabelo','Zelador','Geral','noite'),
+ (4,'Solange Bicudo','Restauradora','Ateliê','dia'),
+ (5,'Ruy Castanho','Segurança','Ala Sul','noite'),
+ (6,'Dalva Meireles','Recepcionista','Saguão','dia'),
+ (7,'Nestor Quintela','Eletricista','Geral','noite'),
+ (8,'Cida Borba','Curadora','Ala Norte','dia');
+
+CREATE TABLE objetos (id INTEGER, peca TEXT, sala TEXT, valor_estimado REAL, status TEXT);
+INSERT INTO objetos VALUES
+ (1,'Máscara de Jade','Sala 12',480000,'desaparecido'),
+ (2,'Vaso Ming','Sala 12',120000,'exposto'),
+ (3,'Retrato de Dona Aurélia','Sala 7',65000,'exposto'),
+ (4,'Moeda de Ouro D. Pedro II','Sala 12',90000,'exposto'),
+ (5,'Espada Cerimonial','Sala 3',210000,'restauro'),
+ (6,'Códice de Olinda','Reserva Técnica',750000,'exposto'),
+ (7,'Colar Tupinambá','Sala 7',310000,'exposto'),
+ (8,'Relógio de Bolso Imperial','Sala 3',45000,'exposto');
+
+CREATE TABLE acessos (id INTEGER, funcionario_id INTEGER, porta TEXT, data_hora TEXT, tipo TEXT);
+INSERT INTO acessos VALUES
+ (1,1,'Portaria','2026-03-14 21:50:00','entrada'),
+ (2,3,'Portaria','2026-03-14 21:55:00','entrada'),
+ (3,5,'Portaria','2026-03-14 22:02:00','entrada'),
+ (4,7,'Portaria','2026-03-14 22:05:00','entrada'),
+ (5,1,'Sala 7','2026-03-14 22:10:00','entrada'),
+ (6,3,'Ateliê','2026-03-14 22:18:00','entrada'),
+ (7,5,'Sala 12','2026-03-14 22:31:00','entrada'),
+ (8,5,'Sala 12','2026-03-14 22:39:00','saida'),
+ (9,1,'Sala 7','2026-03-14 22:44:00','saida'),
+ (10,7,'Reserva Técnica','2026-03-14 22:47:00','entrada'),
+ (11,3,'Ateliê','2026-03-14 22:52:00','saida'),
+ (12,7,'Reserva Técnica','2026-03-14 22:58:00','saida'),
+ (13,1,'Sala 12','2026-03-14 23:15:00','entrada'),
+ (14,1,'Sala 12','2026-03-14 23:20:00','saida'),
+ (15,7,'Portaria','2026-03-14 23:05:00','saida'),
+ (16,5,'Portaria','2026-03-14 23:41:00','saida'),
+ (17,1,'Portaria','2026-03-15 06:02:00','saida'),
+ (18,3,'Portaria','2026-03-15 06:00:00','saida'),
+ (19,2,'Portaria','2026-03-14 17:30:00','saida'),
+ (20,4,'Ateliê','2026-03-14 16:10:00','saida'),
+ (21,6,'Portaria','2026-03-14 18:00:00','saida'),
+ (22,8,'Sala 12','2026-03-14 15:22:00','entrada'),
+ (23,8,'Sala 12','2026-03-14 15:40:00','saida');
+`,
+  pistas: [
+    { titulo: 'O que sumiu',
+      pergunta: 'Comece pelo óbvio. Traga <b>peça, sala e valor estimado</b> do objeto cujo <code>status</code> é <code>desaparecido</code>.',
+      dica: 'SELECT lista as colunas, WHERE filtra as linhas: <code>SELECT peca, sala, valor_estimado FROM objetos WHERE status = \'...\'</code>',
+      solucao: "SELECT peca, sala, valor_estimado FROM objetos WHERE status = 'desaparecido'" },
+    { titulo: 'Quem dorme no museu',
+      pergunta: 'Liste <b>nome e cargo</b> de quem trabalha no turno da <code>noite</code>, em ordem alfabética de nome.',
+      dica: '<code>ORDER BY nome</code> ordena o resultado. Sem ele, o banco devolve as linhas na ordem que quiser.',
+      ordenado: true,
+      solucao: "SELECT nome, cargo FROM funcionarios WHERE turno = 'noite' ORDER BY nome" },
+    { titulo: 'O mapa das portas',
+      pergunta: 'Quais portas registraram algum acesso no dia <b>14/03/2026</b>? Traga a lista <b>sem repetições</b>, em uma coluna só.',
+      dica: '<code>DISTINCT</code> elimina duplicatas. Para pegar só um dia: <code>data_hora LIKE \'2026-03-14%\'</code>.',
+      solucao: "SELECT DISTINCT porta FROM acessos WHERE data_hora LIKE '2026-03-14%'" },
+    { titulo: 'A janela cega',
+      pergunta: 'As câmeras da Sala 12 morreram entre <b>22:20:00 e 22:45:00</b>. Traga <b>funcionario_id, tipo e data_hora</b> dos acessos à porta <code>Sala 12</code> nessa janela, do mais antigo para o mais recente.',
+      dica: '<code>BETWEEN \'2026-03-14 22:20:00\' AND \'2026-03-14 22:45:00\'</code> resolve o intervalo. Junte com <code>AND</code> ao filtro da porta.',
+      ordenado: true,
+      solucao: "SELECT funcionario_id, tipo, data_hora FROM acessos WHERE porta = 'Sala 12' AND data_hora BETWEEN '2026-03-14 22:20:00' AND '2026-03-14 22:45:00' ORDER BY data_hora" },
+    { titulo: 'Colocando nome nos números',
+      pergunta: 'Um id não prende ninguém. Junte <code>acessos</code> com <code>funcionarios</code> e traga <b>nome, cargo, data_hora e tipo</b> de todos os acessos à <code>Sala 12</code> a partir das <b>20h do dia 14</b>, do mais antigo para o mais recente.',
+      dica: '<code>FROM acessos a JOIN funcionarios f ON f.id = a.funcionario_id</code>. O apelido (<code>a</code>, <code>f</code>) evita ambiguidade entre colunas de mesmo nome.',
+      ordenado: true,
+      solucao: "SELECT f.nome, f.cargo, a.data_hora, a.tipo FROM acessos a JOIN funcionarios f ON f.id = a.funcionario_id WHERE a.porta = 'Sala 12' AND a.data_hora >= '2026-03-14 20:00:00' ORDER BY a.data_hora" }
+  ],
+  suspeitos: [
+    { nome: 'Heitor Vasques', papel: 'Segurança, turno da noite', nota: 'Entrou na Sala 12 às 23h15, já com as câmeras funcionando.' },
+    { nome: 'Ivo Rabelo', papel: 'Zelador, turno da noite', nota: 'Passou a noite entre o Ateliê e a Portaria.' },
+    { nome: 'Ruy Castanho', papel: 'Segurança, turno da noite', nota: 'Escalado para a Ala Sul, mas o crachá conta outra história.' },
+    { nome: 'Nestor Quintela', papel: 'Eletricista, turno da noite', nota: 'Estava na Reserva Técnica quando a energia caiu.' }
+  ],
+  culpado: 'Ruy Castanho',
+  desfecho: 'Ruy Castanho passou o crachá na Sala 12 às 22h31 e saiu às 22h39 — oito minutos exatos dentro da janela em que as câmeras estavam cegas. Ele era o único ali. A Máscara de Jade apareceu três dias depois em um leilão fechado em Lisboa.'
+},
+
+/* ---------------------------------------------------------------- CASO 2 */
+{
+  id: 'metro', nivel: 'facil', dataset: 'metro',
+  titulo: 'O Último Trem',
+  local: 'Estação Sé · madrugada de 3 de maio de 2026',
+  resumo: 'Bruna entrou na estação às 23h40. Nunca saiu.',
+  briefing: 'Bruna Quintanilha passou o cartão na catraca da Estação Sé às 23h40 do dia 2 de maio. A bolsa dela foi encontrada na via às 00h05. Cada viagem registra entrada e saída; quando falta a saída, a pessoa ainda estava lá dentro quando o sistema fechou. Há também um registro separado para as <b>portas de serviço</b>, usadas por manutenção — e por quem sabe onde elas ficam.',
+  conceitos: ['WHERE + AND', 'IS NULL', 'IN', 'INNER JOIN', 'BETWEEN'],
+  esquema: `
+CREATE TABLE passageiros (id INTEGER, nome TEXT, cartao TEXT, cidade TEXT);
+INSERT INTO passageiros VALUES
+ (1,'Bruna Quintanilha','C-4471','São Paulo'),
+ (2,'Elias Torres','C-1902','Osasco'),
+ (3,'Marta Vilanova','C-3355','São Paulo'),
+ (4,'Gerson Aquino','C-8120','Guarulhos'),
+ (5,'Ivone Sampaio','C-2044','São Paulo'),
+ (6,'Otávio Bezerra','C-7789','Santo André'),
+ (7,'Lígia Camarão','C-5613','São Paulo'),
+ (8,'Rubens Falcão','C-9001','Osasco'),
+ (9,'Neide Portela','C-6402','São Paulo'),
+ (10,'Wilson Tavares','C-3310','Diadema');
+
+CREATE TABLE viagens (id INTEGER, cartao TEXT, estacao_entrada TEXT, hora_entrada TEXT, estacao_saida TEXT, hora_saida TEXT, linha TEXT);
+INSERT INTO viagens VALUES
+ (1,'C-4471','Sé','2026-05-02 23:40:00',NULL,NULL,'Azul'),
+ (2,'C-1902','Sé','2026-05-02 23:42:00','Luz','2026-05-02 23:58:00','Azul'),
+ (3,'C-3355','República','2026-05-02 23:10:00','Sé','2026-05-02 23:25:00','Vermelha'),
+ (4,'C-8120','Sé','2026-05-02 23:44:00',NULL,NULL,'Azul'),
+ (5,'C-2044','Brás','2026-05-02 22:50:00','Sé','2026-05-02 23:15:00','Vermelha'),
+ (6,'C-7789','Sé','2026-05-02 23:47:00',NULL,NULL,'Azul'),
+ (7,'C-5613','Sé','2026-05-02 21:05:00','Santana','2026-05-02 21:40:00','Azul'),
+ (8,'C-9001','Luz','2026-05-02 23:30:00','Sé','2026-05-02 23:46:00','Azul'),
+ (9,'C-6402','Sé','2026-05-02 23:55:00','Tatuapé','2026-05-03 00:20:00','Vermelha'),
+ (10,'C-3310','Sé','2026-05-02 18:20:00','Jabaquara','2026-05-02 18:55:00','Azul'),
+ (11,'C-1902','Luz','2026-05-02 22:00:00','Sé','2026-05-02 22:20:00','Azul'),
+ (12,'C-9001','Sé','2026-05-02 22:30:00','Luz','2026-05-02 22:48:00','Azul'),
+ (13,'C-3355','Sé','2026-05-02 23:58:00',NULL,NULL,'Azul'),
+ (14,'C-7789','Santana','2026-05-02 22:10:00','Sé','2026-05-02 22:35:00','Azul');
+
+CREATE TABLE ocorrencias (id INTEGER, estacao TEXT, data_hora TEXT, descricao TEXT, gravidade TEXT);
+INSERT INTO ocorrencias VALUES
+ (1,'Sé','2026-05-02 23:52:00','Luz apagada no fim da plataforma sentido Jabaquara','media'),
+ (2,'Sé','2026-05-02 23:58:00','Passageiro relata gritos no fim da plataforma','alta'),
+ (3,'Luz','2026-05-02 23:12:00','Catraca travada','baixa'),
+ (4,'Sé','2026-05-02 22:05:00','Objeto esquecido no banco','baixa'),
+ (5,'República','2026-05-02 23:20:00','Discussão entre passageiros','media'),
+ (6,'Sé','2026-05-03 00:05:00','Bolsa feminina encontrada na via','alta'),
+ (7,'Brás','2026-05-02 21:40:00','Atraso de composição','baixa');
+
+CREATE TABLE portas_servico (id INTEGER, estacao TEXT, cartao TEXT, data_hora TEXT);
+INSERT INTO portas_servico VALUES
+ (1,'Sé','C-5613','2026-05-02 20:50:00'),
+ (2,'Luz','C-9001','2026-05-02 23:05:00'),
+ (3,'Sé','C-7789','2026-05-03 00:03:00'),
+ (4,'Brás','C-2044','2026-05-02 22:40:00'),
+ (5,'Sé','C-3310','2026-05-02 18:10:00');
+`,
+  pistas: [
+    { titulo: 'O que a estação registrou',
+      pergunta: 'Traga <b>data_hora e descricao</b> das ocorrências da estação <code>Sé</code> com gravidade <code>alta</code>, da mais antiga para a mais recente.',
+      dica: 'Dois filtros ligados por <code>AND</code>, mais um <code>ORDER BY data_hora</code>.',
+      ordenado: true,
+      solucao: "SELECT data_hora, descricao FROM ocorrencias WHERE estacao = 'Sé' AND gravidade = 'alta' ORDER BY data_hora" },
+    { titulo: 'Quem entrou e não saiu',
+      pergunta: 'Traga <b>cartao, estacao_entrada e hora_entrada</b> das viagens que <b>não têm hora de saída</b>, da mais antiga para a mais recente.',
+      dica: 'Nulo não se compara com <code>=</code>. Use <code>WHERE hora_saida IS NULL</code>.',
+      ordenado: true,
+      solucao: "SELECT cartao, estacao_entrada, hora_entrada FROM viagens WHERE hora_saida IS NULL ORDER BY hora_entrada" },
+    { titulo: 'De fora da cidade',
+      pergunta: 'A perícia quer os passageiros que moram fora da capital. Traga <b>nome e cartao</b> de quem mora em <code>Osasco</code>, <code>Guarulhos</code> ou <code>Diadema</code>, em ordem alfabética.',
+      dica: '<code>WHERE cidade IN (\'Osasco\', \'Guarulhos\', \'Diadema\')</code> é mais limpo que três <code>OR</code>.',
+      ordenado: true,
+      solucao: "SELECT nome, cartao FROM passageiros WHERE cidade IN ('Osasco','Guarulhos','Diadema') ORDER BY nome" },
+    { titulo: 'Cartão tem dono',
+      pergunta: 'Junte <code>viagens</code> com <code>passageiros</code> pelo <code>cartao</code> e traga <b>nome, estacao_entrada e hora_entrada</b> de quem não registrou saída, da mais antiga para a mais recente.',
+      dica: '<code>FROM viagens v JOIN passageiros p ON p.cartao = v.cartao</code> e mantenha o filtro <code>v.hora_saida IS NULL</code>.',
+      ordenado: true,
+      solucao: "SELECT p.nome, v.estacao_entrada, v.hora_entrada FROM viagens v JOIN passageiros p ON p.cartao = v.cartao WHERE v.hora_saida IS NULL ORDER BY v.hora_entrada" },
+    { titulo: 'A porta de serviço',
+      pergunta: 'A bolsa apareceu às 00h05. Descubra quem usou uma porta de serviço da <code>Sé</code> entre <b>23:50:00 do dia 2</b> e <b>00:30:00 do dia 3</b>. Traga <b>nome e data_hora</b>.',
+      dica: 'Junte <code>portas_servico</code> com <code>passageiros</code> pelo cartão e use <code>BETWEEN</code> nas datas completas.',
+      solucao: "SELECT p.nome, ps.data_hora FROM portas_servico ps JOIN passageiros p ON p.cartao = ps.cartao WHERE ps.estacao = 'Sé' AND ps.data_hora BETWEEN '2026-05-02 23:50:00' AND '2026-05-03 00:30:00'" }
+  ],
+  suspeitos: [
+    { nome: 'Gerson Aquino', papel: 'Entrou na Sé às 23h44', nota: 'Mora em Guarulhos. Sem registro de saída.' },
+    { nome: 'Marta Vilanova', papel: 'Entrou na Sé às 23h58', nota: 'Chegou depois dos gritos. Sem registro de saída.' },
+    { nome: 'Otávio Bezerra', papel: 'Entrou na Sé às 23h47', nota: 'Já havia estado na Sé às 22h35 naquela noite.' },
+    { nome: 'Rubens Falcão', papel: 'Desembarcou na Sé às 23h46', nota: 'Vindo da Luz. Saída registrada normalmente.' }
+  ],
+  culpado: 'Otávio Bezerra',
+  desfecho: 'Otávio Bezerra entrou duas vezes na Sé naquela noite — a segunda às 23h47, sem nunca registrar saída pela catraca. Às 00h03 o cartão dele abriu uma porta de serviço no fim da plataforma, cinco minutos depois dos gritos e dois minutos antes da bolsa ser encontrada na via. Ele conhecia a estação: trabalhou na manutenção da linha Azul por seis anos.'
+},
+
+/* ---------------------------------------------------------------- CASO 3 */
+{
+  id: 'seguradora', nivel: 'medio', dataset: 'seguradora',
+  titulo: 'A Apólice Fantasma',
+  local: 'Meridiano Seguros · auditoria do 1º trimestre',
+  resumo: 'Sinistros grandes demais, rápidos demais, no mesmo lugar.',
+  briefing: 'A área de subscrição acendeu um alerta: a sinistralidade da carteira de Auto estourou o orçamento em três meses. O padrão de fraude clássico é simples de descrever e difícil de ver no meio de milhares de linhas — <b>apólice nova, sinistro grande logo no início da vigência, sempre pelo mesmo corretor</b>. Aqui você vai precisar de agregação: contar, somar e filtrar grupos.',
+  conceitos: ['GROUP BY', 'SUM / COUNT', 'HAVING', 'DATE_DIFF', 'LEFT JOIN', 'SAFE_DIVIDE'],
+  esquema: `
+CREATE TABLE corretores (id INTEGER, nome TEXT, regional TEXT, admissao TEXT);
+INSERT INTO corretores VALUES
+ (1,'Anísio Meireles','Sudeste','2019-02-11'),
+ (2,'Vânia Krauss','Sul','2021-07-03'),
+ (3,'Domingos Leiria','Nordeste','2018-05-20'),
+ (4,'Sílvia Andrade','Sudeste','2022-01-10'),
+ (5,'Tomás Bicalho','Centro-Oeste','2020-09-15');
+
+CREATE TABLE clientes (id INTEGER, nome TEXT, cidade TEXT, data_cadastro TEXT);
+INSERT INTO clientes VALUES
+ (1,'Cléber Nunes','Campinas','2025-11-02'),
+ (2,'Rosa Meneghel','Curitiba','2025-11-04'),
+ (3,'Jairo Pessoa','Recife','2025-03-18'),
+ (4,'Lúcia Amarante','Campinas','2026-01-09'),
+ (5,'Wagner Pontes','Goiânia','2024-08-22'),
+ (6,'Bia Toledo','Curitiba','2026-01-12'),
+ (7,'Hélio Saraiva','Recife','2025-06-30'),
+ (8,'Neusa Cordeiro','Campinas','2026-01-15'),
+ (9,'Ítalo Bergamo','São Paulo','2023-04-01'),
+ (10,'Fátima Rolim','Goiânia','2025-12-05'),
+ (11,'Décio Vasconcelos','Campinas','2026-01-20'),
+ (12,'Olga Prestes','Porto Alegre','2024-02-14');
+
+CREATE TABLE apolices (id INTEGER, cliente_id INTEGER, corretor_id INTEGER, produto TEXT, premio REAL, inicio_vigencia TEXT, fim_vigencia TEXT);
+INSERT INTO apolices VALUES
+ (1,1,1,'Auto',2400,'2025-11-05','2026-11-05'),
+ (2,2,2,'Auto',3100,'2025-11-06','2026-11-06'),
+ (3,3,3,'Residencial',890,'2025-03-20','2026-03-20'),
+ (4,4,1,'Auto',2750,'2026-01-10','2027-01-10'),
+ (5,5,5,'Vida',1200,'2024-08-25','2025-08-25'),
+ (6,6,2,'Residencial',1450,'2026-01-14','2027-01-14'),
+ (7,7,3,'Auto',2980,'2025-07-01','2026-07-01'),
+ (8,8,1,'Auto',3300,'2026-01-16','2027-01-16'),
+ (9,9,4,'Vida',2100,'2023-04-05','2024-04-05'),
+ (10,10,5,'Auto',2600,'2025-12-06','2026-12-06'),
+ (11,11,1,'Residencial',1750,'2026-01-21','2027-01-21'),
+ (12,12,4,'Auto',2200,'2024-02-16','2025-02-16'),
+ (13,1,1,'Residencial',1600,'2025-11-05','2026-11-05'),
+ (14,9,4,'Auto',3400,'2023-04-05','2024-04-05'),
+ (15,3,3,'Vida',1100,'2025-03-20','2026-03-20'),
+ (16,5,5,'Residencial',980,'2024-08-25','2025-08-25');
+
+CREATE TABLE sinistros (id INTEGER, apolice_id INTEGER, tipo TEXT, data_ocorrencia TEXT, valor_pago REAL, status TEXT);
+INSERT INTO sinistros VALUES
+ (1,1,'Colisão','2025-11-20',18500,'aprovado'),
+ (2,4,'Roubo','2026-01-22',41200,'aprovado'),
+ (3,8,'Colisão','2026-01-25',37800,'aprovado'),
+ (4,11,'Incêndio','2026-02-02',52300,'aprovado'),
+ (5,13,'Alagamento','2025-11-18',22400,'aprovado'),
+ (6,2,'Colisão','2026-04-12',9600,'aprovado'),
+ (7,3,'Alagamento','2025-09-14',5400,'aprovado'),
+ (8,7,'Colisão','2026-02-03',12300,'negado'),
+ (9,10,'Roubo','2026-05-30',14900,'aprovado'),
+ (10,6,'Incêndio','2026-06-11',8700,'aprovado'),
+ (11,9,'Invalidez','2023-12-02',21000,'aprovado'),
+ (12,12,'Colisão','2024-09-10',7800,'aprovado'),
+ (13,14,'Colisão','2023-11-14',15600,'negado'),
+ (14,5,'Invalidez','2025-02-11',12000,'aprovado');
+`,
+  pistas: [
+    { titulo: 'Onde o dinheiro sai',
+      pergunta: 'Para cada <code>tipo</code> de sinistro <b>aprovado</b>, traga <b>tipo</b>, a quantidade como <code>qtd</code> e a soma de <code>valor_pago</code> como <code>total</code>. Ordene do maior total para o menor.',
+      dica: '<code>GROUP BY tipo</code> cria um grupo por tipo; <code>COUNT(*) AS qtd</code> e <code>SUM(valor_pago) AS total</code> resumem cada grupo.',
+      ordenado: true,
+      solucao: "SELECT tipo, COUNT(*) AS qtd, SUM(valor_pago) AS total FROM sinistros WHERE status = 'aprovado' GROUP BY tipo ORDER BY total DESC" },
+    { titulo: 'Corretores com volume',
+      pergunta: 'Traga o <b>nome do corretor</b> e quantas apólices ele emitiu como <code>apolices</code>, mantendo só quem tem <b>3 ou mais</b>. Ordene do maior para o menor.',
+      dica: '<code>WHERE</code> filtra linhas antes de agrupar; <code>HAVING COUNT(*) >= 3</code> filtra os grupos depois.',
+      solucao: "SELECT c.nome, COUNT(*) AS apolices FROM apolices a JOIN corretores c ON c.id = a.corretor_id GROUP BY c.nome HAVING COUNT(*) >= 3 ORDER BY apolices DESC" },
+    { titulo: 'Sinistro cedo demais',
+      pergunta: 'Um sinistro logo depois da assinatura é o sinal clássico. Traga <b>id do sinistro, produto da apólice e a diferença em dias</b> (coluna <code>dias</code>) entre <code>data_ocorrencia</code> e <code>inicio_vigencia</code>, mantendo apenas os casos com <b>30 dias ou menos</b>.',
+      dica: 'No BigQuery: <code>DATE_DIFF(s.data_ocorrencia, a.inicio_vigencia, DAY)</code>. O primeiro argumento é a data mais recente.',
+      solucao: "SELECT s.id, a.produto, DATE_DIFF(s.data_ocorrencia, a.inicio_vigencia, DAY) AS dias FROM sinistros s JOIN apolices a ON a.id = s.apolice_id WHERE DATE_DIFF(s.data_ocorrencia, a.inicio_vigencia, DAY) <= 30" },
+    { titulo: 'Sinistralidade por corretor',
+      pergunta: 'Compare o que entra com o que sai. Para cada corretor traga <b>nome</b>, <code>SUM(premio) AS premio</code>, a soma dos sinistros <b>aprovados</b> como <code>pago</code> (use <code>0</code> quando não houver) e a razão <code>pago / premio</code> arredondada em 2 casas como <code>sinistralidade</code>. Ordene pela sinistralidade, do maior para o menor.',
+      dica: 'Use <code>LEFT JOIN sinistros s ON s.apolice_id = a.id AND s.status = \'aprovado\'</code> — a condição de status vai no <code>ON</code> para não perder corretores sem sinistro. Depois <code>ROUND(SAFE_DIVIDE(SUM(COALESCE(s.valor_pago,0)), SUM(a.premio)), 2)</code>.',
+      ordenado: true,
+      solucao: "SELECT c.nome, SUM(a.premio) AS premio, SUM(COALESCE(s.valor_pago,0)) AS pago, ROUND(SAFE_DIVIDE(SUM(COALESCE(s.valor_pago,0)), SUM(a.premio)), 2) AS sinistralidade FROM apolices a JOIN corretores c ON c.id = a.corretor_id LEFT JOIN sinistros s ON s.apolice_id = a.id AND s.status = 'aprovado' GROUP BY c.nome ORDER BY sinistralidade DESC" },
+    { titulo: 'Uma cidade só',
+      pergunta: 'Fraude organizada se concentra. Junte <code>apolices</code>, <code>clientes</code> e <code>corretores</code> e traga <b>o nome do corretor como <code>corretor</code>, a cidade do cliente e a contagem como <code>qtd</code></b>, mantendo só as combinações com <b>2 ou mais</b> apólices. Ordene da maior quantidade para a menor.',
+      dica: 'Dá para agrupar por mais de uma coluna: <code>GROUP BY co.nome, cl.cidade</code>. São dois JOINs a partir de <code>apolices</code>.',
+      solucao: "SELECT co.nome AS corretor, cl.cidade, COUNT(*) AS qtd FROM apolices a JOIN clientes cl ON cl.id = a.cliente_id JOIN corretores co ON co.id = a.corretor_id GROUP BY co.nome, cl.cidade HAVING COUNT(*) >= 2 ORDER BY qtd DESC" }
+  ],
+  suspeitos: [
+    { nome: 'Anísio Meireles', papel: 'Regional Sudeste', nota: 'Cinco apólices, todas de clientes de Campinas.' },
+    { nome: 'Vânia Krauss', papel: 'Regional Sul', nota: 'Dois clientes de Curitiba, sinistros meses depois da vigência.' },
+    { nome: 'Domingos Leiria', papel: 'Regional Nordeste', nota: 'Carteira antiga, um sinistro negado.' },
+    { nome: 'Tomás Bicalho', papel: 'Regional Centro-Oeste', nota: 'Sinistro de invalidez alto, mas seis meses após a assinatura.' }
+  ],
+  culpado: 'Anísio Meireles',
+  desfecho: 'Todas as cinco apólices de Anísio Meireles são de clientes de Campinas, e todas as cinco geraram sinistro aprovado em menos de 16 dias de vigência. R$ 172.200 pagos sobre R$ 11.800 de prêmio — uma sinistralidade de 14,59, quase três vezes a do segundo colocado. Os quatro clientes tinham cadastro aberto na mesma semana, pelo mesmo endereço de e-mail.'
+},
+
+/* ---------------------------------------------------------------- CASO 4 */
+{
+  id: 'ciber', nivel: 'medio', dataset: 'ciber',
+  titulo: 'Rastro Digital',
+  local: 'Meridiano Seguros · vazamento de 9 de julho de 2026',
+  resumo: 'A base de clientes apareceu à venda num fórum. O log sabe quem a tirou.',
+  briefing: 'Alguém baixou 7,4 GB da base de clientes e colocou à venda na madrugada. Você tem os <b>logins</b> (com IP, dispositivo e se deu certo), a tabela de <b>IPs</b> (país e se é VPN), os <b>arquivos</b> com dono e classificação, e os <b>downloads</b>. O administrador de TI é o suspeito óbvio — mas o log não liga para o que é óbvio.',
+  conceitos: ['EXTRACT', 'JOIN múltiplo', 'subconsulta com IN', 'TIMESTAMP_DIFF', 'HAVING'],
+  esquema: `
+CREATE TABLE usuarios (id INTEGER, nome TEXT, email TEXT, setor TEXT, cargo TEXT);
+INSERT INTO usuarios VALUES
+ (1,'Adriana Sartori','a.sartori@meridiano.com','Atuarial','Analista'),
+ (2,'Bruno Lacerda','b.lacerda@meridiano.com','TI','Administrador'),
+ (3,'Cássia Vidigal','c.vidigal@meridiano.com','Jurídico','Advogada'),
+ (4,'Dênis Portugal','d.portugal@meridiano.com','Atuarial','Cientista de Dados'),
+ (5,'Elisa Munhoz','e.munhoz@meridiano.com','Comercial','Gerente'),
+ (6,'Fabrício Alencar','f.alencar@meridiano.com','TI','Suporte'),
+ (7,'Glória Tavares','g.tavares@meridiano.com','Financeiro','Controller'),
+ (8,'Hugo Barreto','h.barreto@meridiano.com','Comercial','Executivo');
+
+CREATE TABLE ips (ip TEXT, pais TEXT, cidade TEXT, vpn INTEGER);
+INSERT INTO ips VALUES
+ ('187.45.2.10','Brasil','São Paulo',0),
+ ('187.45.2.11','Brasil','São Paulo',0),
+ ('200.19.88.4','Brasil','Rio de Janeiro',0),
+ ('189.6.44.2','Brasil','Belo Horizonte',0),
+ ('45.133.1.77','Romênia','Bucareste',1),
+ ('103.75.20.9','Vietnã','Hanói',1),
+ ('91.207.5.60','Holanda','Amsterdã',1);
+
+CREATE TABLE logins (id INTEGER, usuario_id INTEGER, ip TEXT, dispositivo TEXT, ts TEXT, sucesso INTEGER);
+INSERT INTO logins VALUES
+ (1,1,'187.45.2.10','Notebook corporativo','2026-07-08 08:12:00',1),
+ (2,2,'187.45.2.11','Notebook corporativo','2026-07-08 07:55:00',1),
+ (3,4,'187.45.2.10','Notebook corporativo','2026-07-08 09:03:00',1),
+ (4,3,'200.19.88.4','Notebook corporativo','2026-07-08 09:40:00',1),
+ (5,5,'189.6.44.2','Celular','2026-07-08 10:15:00',1),
+ (6,7,'187.45.2.11','Notebook corporativo','2026-07-08 08:30:00',1),
+ (7,8,'189.6.44.2','Celular','2026-07-08 11:02:00',1),
+ (8,6,'187.45.2.10','Notebook corporativo','2026-07-08 13:20:00',1),
+ (9,4,'45.133.1.77','Navegador desconhecido','2026-07-09 02:07:00',0),
+ (10,4,'45.133.1.77','Navegador desconhecido','2026-07-09 02:09:00',0),
+ (11,4,'45.133.1.77','Navegador desconhecido','2026-07-09 02:11:00',1),
+ (12,2,'91.207.5.60','Notebook corporativo','2026-07-09 01:40:00',0),
+ (13,2,'187.45.2.11','Notebook corporativo','2026-07-09 08:02:00',1),
+ (14,3,'103.75.20.9','Celular','2026-07-09 03:22:00',0),
+ (15,1,'187.45.2.10','Notebook corporativo','2026-07-09 08:20:00',1),
+ (16,7,'187.45.2.11','Notebook corporativo','2026-07-09 09:11:00',1),
+ (17,6,'187.45.2.10','Notebook corporativo','2026-07-09 08:45:00',1),
+ (18,5,'189.6.44.2','Celular','2026-07-09 09:30:00',1);
+
+CREATE TABLE arquivos (id INTEGER, nome TEXT, classificacao TEXT, dono_id INTEGER);
+INSERT INTO arquivos VALUES
+ (1,'tabua_mortalidade_2026.csv','confidencial',4),
+ (2,'precificacao_auto_v9.xlsx','confidencial',1),
+ (3,'contrato_resseguro.pdf','confidencial',3),
+ (4,'folha_pagamento_06.xlsx','restrito',7),
+ (5,'manual_onboarding.pdf','publico',6),
+ (6,'base_clientes_full.csv','confidencial',5),
+ (7,'relatorio_trimestral.pdf','interno',7),
+ (8,'politica_senhas.pdf','interno',2);
+
+CREATE TABLE downloads (id INTEGER, usuario_id INTEGER, arquivo_id INTEGER, ts TEXT, bytes INTEGER);
+INSERT INTO downloads VALUES
+ (1,1,2,'2026-07-08 09:30:00',240000),
+ (2,4,1,'2026-07-08 10:05:00',1850000),
+ (3,3,3,'2026-07-08 14:12:00',980000),
+ (4,7,4,'2026-07-08 15:40:00',620000),
+ (5,6,5,'2026-07-08 16:00:00',120000),
+ (6,4,3,'2026-07-09 02:18:00',980000),
+ (7,4,6,'2026-07-09 02:24:00',7400000),
+ (8,4,4,'2026-07-09 02:31:00',620000),
+ (9,5,6,'2026-07-09 10:00:00',7400000),
+ (10,8,7,'2026-07-09 11:15:00',310000),
+ (11,2,8,'2026-07-09 09:00:00',90000),
+ (12,1,2,'2026-07-09 09:45:00',240000);
+`,
+  pistas: [
+    { titulo: 'Quem trabalha de madrugada',
+      pergunta: 'Traga <b>id, usuario_id e ts</b> dos downloads feitos antes das <b>6 da manhã</b>, do mais antigo para o mais recente. Extraia a hora do campo <code>ts</code>.',
+      dica: 'No BigQuery: <code>EXTRACT(HOUR FROM ts) &lt; 6</code>. Ele devolve um número de 0 a 23.',
+      ordenado: true,
+      solucao: "SELECT id, usuario_id, ts FROM downloads WHERE EXTRACT(HOUR FROM ts) < 6 ORDER BY ts" },
+    { titulo: 'Endereços que não deveriam existir',
+      pergunta: 'Junte <code>logins</code>, <code>usuarios</code> e <code>ips</code>. Traga <b>nome, ip, pais, ts e sucesso</b> de todo login vindo de um IP marcado como VPN (<code>vpn = 1</code>), do mais antigo para o mais recente.',
+      dica: 'Dois JOINs a partir de <code>logins</code>: um em <code>usuarios</code> por <code>usuario_id</code>, outro em <code>ips</code> pelo próprio <code>ip</code>.',
+      ordenado: true,
+      solucao: "SELECT u.nome, l.ip, i.pais, l.ts, l.sucesso FROM logins l JOIN usuarios u ON u.id = l.usuario_id JOIN ips i ON i.ip = l.ip WHERE i.vpn = 1 ORDER BY l.ts" },
+    { titulo: 'Quem move volume',
+      pergunta: 'Usando uma <b>subconsulta</b>, traga <b>nome e setor</b> dos usuários que fizeram algum download acima de <b>500.000 bytes</b>, em ordem alfabética de nome.',
+      dica: '<code>WHERE id IN (SELECT usuario_id FROM downloads WHERE bytes > 500000)</code> — a consulta de dentro devolve uma lista de ids.',
+      ordenado: true,
+      solucao: "SELECT nome, setor FROM usuarios WHERE id IN (SELECT usuario_id FROM downloads WHERE bytes > 500000) ORDER BY nome" },
+    { titulo: 'Quanto tempo levou a invasão',
+      pergunta: 'Para cada usuário com login vindo de VPN, traga <b>nome</b>, a primeira tentativa como <code>primeira</code>, a última como <code>ultima</code> e a diferença em <b>minutos</b> como <code>minutos</code>.',
+      dica: '<code>MIN(l.ts)</code> e <code>MAX(l.ts)</code> dentro de um <code>GROUP BY u.nome</code>, e <code>TIMESTAMP_DIFF(MAX(l.ts), MIN(l.ts), MINUTE)</code> para o intervalo.',
+      solucao: "SELECT u.nome, MIN(l.ts) AS primeira, MAX(l.ts) AS ultima, TIMESTAMP_DIFF(MAX(l.ts), MIN(l.ts), MINUTE) AS minutos FROM logins l JOIN usuarios u ON u.id = l.usuario_id JOIN ips i ON i.ip = l.ip WHERE i.vpn = 1 GROUP BY u.nome" },
+    { titulo: 'O arquivo que não era dele',
+      pergunta: 'Feche o cerco: downloads feitos entre <b>0h e 5h</b> de arquivos cujo <code>dono_id</code> é <b>diferente</b> de quem baixou. Traga <b>nome do usuário, nome do arquivo como <code>arquivo</code>, classificacao, ts e os megabytes</b> arredondados em 2 casas como <code>mb</code> (bytes dividido por 1000000.0). Do mais antigo para o mais recente.',
+      dica: 'Junte <code>downloads</code> com <code>usuarios</code> e <code>arquivos</code>. O filtro do dono é <code>a.dono_id &lt;&gt; d.usuario_id</code>.',
+      ordenado: true,
+      solucao: "SELECT u.nome, a.nome AS arquivo, a.classificacao, d.ts, ROUND(d.bytes / 1000000.0, 2) AS mb FROM downloads d JOIN usuarios u ON u.id = d.usuario_id JOIN arquivos a ON a.id = d.arquivo_id WHERE EXTRACT(HOUR FROM d.ts) BETWEEN 0 AND 5 AND a.dono_id <> d.usuario_id ORDER BY d.ts" }
+  ],
+  suspeitos: [
+    { nome: 'Bruno Lacerda', papel: 'TI · Administrador', nota: 'Uma tentativa falha de VPN holandesa às 01h40. Nenhum download noturno.' },
+    { nome: 'Cássia Vidigal', papel: 'Jurídico · Advogada', nota: 'Tentativa falha de VPN vietnamita às 03h22. Baixou só o próprio contrato.' },
+    { nome: 'Dênis Portugal', papel: 'Atuarial · Cientista de Dados', nota: 'Três tentativas de VPN romena; a terceira funcionou.' },
+    { nome: 'Elisa Munhoz', papel: 'Comercial · Gerente', nota: 'Dona da base de clientes. Baixou o próprio arquivo às 10h.' }
+  ],
+  culpado: 'Dênis Portugal',
+  desfecho: 'A conta de Dênis Portugal entrou de um IP romeno às 02h11, na terceira tentativa, quatro minutos depois da primeira. Nos vinte minutos seguintes baixou três arquivos que não eram dele — contrato de resseguro, folha de pagamento e os 7,4 GB da base de clientes. Bruno e Cássia sofreram tentativas de invasão na mesma madrugada e nenhuma passou: eram ruído para embaralhar o log.'
+},
+
+/* ---------------------------------------------------------------- CASO 5 */
+{
+  id: 'financeiro', nivel: 'dificil', dataset: 'financeiro',
+  titulo: 'Operação Correnteza',
+  local: 'COAF · fevereiro de 2026',
+  resumo: 'Nenhuma transação passa de dez mil. Juntas, passam de oitenta.',
+  briefing: 'Transferências acima de R$ 10.000 disparam comunicação automática. Então o dinheiro é picado em fatias menores, enviadas em rajada, e devolvido depois por um caminho indireto — <b>estruturação</b>, ou <i>smurfing</i>. Para enxergar isso você precisa olhar cada linha <b>no contexto da anterior</b>: é o território das funções de janela e das CTEs. Este é o último caso, e ele não dá dica de graça.',
+  conceitos: ['CTE (WITH)', 'RANK() OVER', 'LAG()', 'SUM() OVER', 'self-join', 'CTE encadeada'],
+  esquema: `
+CREATE TABLE contas (id INTEGER, titular TEXT, agencia TEXT, tipo TEXT, abertura TEXT);
+INSERT INTO contas VALUES
+ (1,'Amaro Quirino','0341','PF','2019-03-12'),
+ (2,'Benedita Salles','0341','PF','2020-08-01'),
+ (3,'Cordilheira Log Ltda','1120','PJ','2024-11-05'),
+ (4,'Dorival Fagundes','0752','PF','2018-01-23'),
+ (5,'Estrela Serviços ME','1120','PJ','2025-09-18'),
+ (6,'Fernanda Lousada','0341','PF','2022-05-30'),
+ (7,'Girassol Comércio SA','0752','PJ','2017-06-11'),
+ (8,'Hamilton Braz','1120','PF','2025-10-02'),
+ (9,'Ilha Nova Consultoria','1120','PJ','2025-10-20'),
+ (10,'Jandira Peçanha','0752','PF','2021-12-09');
+
+CREATE TABLE transacoes (id INTEGER, conta_origem INTEGER, conta_destino INTEGER, valor REAL, ts TEXT, canal TEXT);
+INSERT INTO transacoes VALUES
+ (1,8,9,9800,'2026-02-10 09:02:00','pix'),
+ (2,8,9,9750,'2026-02-10 09:14:00','pix'),
+ (3,8,9,9900,'2026-02-10 09:27:00','pix'),
+ (4,8,9,9650,'2026-02-10 09:41:00','pix'),
+ (5,8,9,9880,'2026-02-10 09:55:00','pix'),
+ (6,8,9,9700,'2026-02-10 10:08:00','pix'),
+ (7,9,5,57000,'2026-02-10 14:30:00','ted'),
+ (8,5,8,55500,'2026-02-11 11:15:00','ted'),
+ (9,1,2,350,'2026-02-10 08:10:00','pix'),
+ (10,2,6,1200,'2026-02-10 12:45:00','pix'),
+ (11,4,7,8900,'2026-02-10 15:20:00','ted'),
+ (12,7,4,2300,'2026-02-11 09:30:00','ted'),
+ (13,3,7,24500,'2026-02-10 16:05:00','ted'),
+ (14,6,1,780,'2026-02-11 10:02:00','pix'),
+ (15,10,4,4300,'2026-02-11 13:40:00','pix'),
+ (16,7,3,12000,'2026-02-11 15:10:00','ted'),
+ (17,2,10,600,'2026-02-12 08:55:00','pix'),
+ (18,5,3,9300,'2026-02-12 10:20:00','pix'),
+ (19,3,5,9450,'2026-02-12 10:35:00','pix'),
+ (20,1,6,150,'2026-02-12 11:00:00','pix'),
+ (21,8,9,9500,'2026-02-12 14:02:00','pix'),
+ (22,8,9,9600,'2026-02-12 14:16:00','pix'),
+ (23,8,9,9820,'2026-02-12 14:29:00','pix'),
+ (24,9,5,28000,'2026-02-12 17:00:00','ted'),
+ (25,4,10,1500,'2026-02-12 18:20:00','pix'),
+ (26,7,1,5600,'2026-02-12 19:05:00','ted'),
+ (27,6,2,240,'2026-02-12 19:40:00','pix'),
+ (28,10,7,3100,'2026-02-12 20:15:00','pix'),
+ (29,7,10,4200,'2026-02-12 19:18:00','ted');
+`,
+  pistas: [
+    { titulo: 'O ranking do dinheiro',
+      pergunta: 'Monte uma <b>CTE</b> chamada <code>envio</code> que some <code>valor</code> e conte as transações por <code>conta_origem</code>. Depois junte com <code>contas</code> e traga <b>titular, total, qtd</b> e a posição no ranking como <code>posicao</code>, do maior total para o menor.',
+      dica: '<code>WITH envio AS (SELECT conta_origem AS conta, SUM(valor) AS total, COUNT(*) AS qtd FROM transacoes GROUP BY conta_origem)</code> e depois <code>RANK() OVER (ORDER BY e.total DESC) AS posicao</code>.',
+      ordenado: true,
+      solucao: "WITH envio AS (SELECT conta_origem AS conta, SUM(valor) AS total, COUNT(*) AS qtd FROM transacoes GROUP BY conta_origem) SELECT c.titular, e.total, e.qtd, RANK() OVER (ORDER BY e.total DESC) AS posicao FROM envio e JOIN contas c ON c.id = e.conta ORDER BY posicao" },
+    { titulo: 'A rajada',
+      pergunta: 'Use <code>LAG()</code> para calcular, dentro de cada <code>conta_origem</code>, quantos <b>minutos</b> separam cada transação da anterior. Traga <b>conta_origem, ts, valor e minutos</b> apenas das transações com <b>20 minutos ou menos</b> desde a anterior, ordenado por conta e depois por ts.',
+      dica: 'Função de janela não pode ir no WHERE — calcule numa CTE e filtre fora: <code>LAG(ts) OVER (PARTITION BY conta_origem ORDER BY ts)</code> dentro de <code>TIMESTAMP_DIFF(ts, ..., MINUTE)</code>.',
+      ordenado: true,
+      solucao: "WITH seq AS (SELECT conta_origem, ts, valor, TIMESTAMP_DIFF(ts, LAG(ts) OVER (PARTITION BY conta_origem ORDER BY ts), MINUTE) AS minutos FROM transacoes) SELECT conta_origem, ts, valor, minutos FROM seq WHERE minutos <= 20 ORDER BY conta_origem, ts" },
+    { titulo: 'Somando a fatia',
+      pergunta: 'Nenhuma fatia da conta <b>8</b> passa de dez mil. Mostre o acumulado: traga <b>ts, valor</b> e a soma corrente como <code>acumulado</code> para as transações em que <code>conta_origem = 8</code>, em ordem de <code>ts</code>.',
+      dica: '<code>SUM(valor) OVER (ORDER BY ts ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS acumulado</code>.',
+      ordenado: true,
+      solucao: "SELECT ts, valor, SUM(valor) OVER (ORDER BY ts ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS acumulado FROM transacoes WHERE conta_origem = 8 ORDER BY ts" },
+    { titulo: 'O caminho de volta',
+      pergunta: 'Dinheiro lavado volta para casa. Com <b>três cópias</b> de <code>transacoes</code>, encontre os ciclos <code>A → B → C → A</code> em que cada passo é posterior ao anterior. Traga <b>a, b, c</b> (as contas de origem de cada passo), a contagem de caminhos como <code>caminhos</code> e a soma do primeiro passo como <code>entrou</code>. Ordene por <code>caminhos</code>, do maior para o menor.',
+      dica: '<code>FROM transacoes t1 JOIN transacoes t2 ON t2.conta_origem = t1.conta_destino AND t2.ts > t1.ts JOIN transacoes t3 ON t3.conta_origem = t2.conta_destino AND t3.ts > t2.ts AND t3.conta_destino = t1.conta_origem</code>, agrupando pelas três origens.',
+      solucao: "SELECT t1.conta_origem AS a, t2.conta_origem AS b, t3.conta_origem AS c, COUNT(*) AS caminhos, SUM(t1.valor) AS entrou FROM transacoes t1 JOIN transacoes t2 ON t2.conta_origem = t1.conta_destino AND t2.ts > t1.ts JOIN transacoes t3 ON t3.conta_origem = t2.conta_destino AND t3.ts > t2.ts AND t3.conta_destino = t1.conta_origem GROUP BY t1.conta_origem, t2.conta_origem, t3.conta_origem ORDER BY caminhos DESC" },
+    { titulo: 'Contas novas, dinheiro velho',
+      pergunta: 'Feche o caso com <b>duas CTEs</b>: <code>mov</code> (soma e contagem do que cada conta <b>enviou</b>) e <code>rec</code> (soma do que cada conta <b>recebeu</b>). Traga <b>titular, tipo, abertura, enviado, recebido</b> (0 quando não houver) e o giro <code>enviado / recebido</code> arredondado em 2 casas como <code>giro</code>, apenas para contas abertas a partir de <b>2025-01-01</b>, ordenado pelo enviado, do maior para o menor.',
+      dica: 'Duas CTEs separadas por vírgula. Junte <code>mov</code> com <code>contas</code> por INNER JOIN e com <code>rec</code> por LEFT JOIN, e use <code>SAFE_DIVIDE</code> para o giro.',
+      ordenado: true,
+      solucao: "WITH mov AS (SELECT conta_origem AS conta, SUM(valor) AS enviado, COUNT(*) AS transferencias FROM transacoes GROUP BY conta_origem), rec AS (SELECT conta_destino AS conta, SUM(valor) AS recebido FROM transacoes GROUP BY conta_destino) SELECT c.titular, c.tipo, c.abertura, m.enviado, COALESCE(r.recebido, 0) AS recebido, ROUND(SAFE_DIVIDE(m.enviado, COALESCE(r.recebido, 0)), 2) AS giro FROM mov m JOIN contas c ON c.id = m.conta LEFT JOIN rec r ON r.conta = m.conta WHERE c.abertura >= '2025-01-01' ORDER BY m.enviado DESC" }
+  ],
+  suspeitos: [
+    { nome: 'Hamilton Braz', papel: 'PF · conta aberta em out/2025', nota: 'Nove transferências, nenhuma acima de dez mil.' },
+    { nome: 'Ilha Nova Consultoria', papel: 'PJ · conta aberta em out/2025', nota: 'Recebe tudo da conta 8 e repassa em dois lotes.' },
+    { nome: 'Estrela Serviços ME', papel: 'PJ · conta aberta em set/2025', nota: 'Última parada antes do dinheiro voltar.' },
+    { nome: 'Girassol Comércio SA', papel: 'PJ · conta de 2017', nota: 'Volume alto, mas movimenta com contas antigas e conhecidas.' }
+  ],
+  culpado: 'Hamilton Braz',
+  desfecho: 'Hamilton Braz abriu a conta em outubro de 2025 e em três dias enviou R$ 87.600 em nove parcelas — todas entre R$ 9.500 e R$ 9.900, nenhuma acima do limite de comunicação, com treze minutos de intervalo médio. O dinheiro passou pela Ilha Nova, parou na Estrela Serviços e voltou para ele como um único TED de R$ 55.500 com nota de "consultoria". As duas empresas foram abertas semanas antes da conta dele, no mesmo endereço.'
+}
+];
+
+
+/* ============================================================
+   CASOS NOVOS — todos ficcionais
+   ============================================================ */
+
+const CASOS_EXTRA = [
+/* --------------------------------------------- SINAL DE ANTENA (fácil) */
+{
+  id: 'antena', nivel: 'facil', dataset: 'telecom',
+  titulo: 'Sinal de Antena',
+  local: 'Belo Horizonte · 11 de agosto de 2026',
+  resumo: 'Ela saiu para mostrar um apartamento. O celular continuou andando sem ela.',
+  briefing: 'Neusa Dantas, corretora, saiu às 18h para uma visita marcada no Buritis e não voltou. O aparelho dela continuou se registrando em antenas por mais de uma hora — e o último registro é num bairro onde ela não tinha nada a fazer. Cada vez que um celular fala com a rede, fica uma linha em <code>registros</code>: linha, antena e horário. O trajeto de uma pessoa vira uma consulta ordenada por tempo.',
+  conceitos: ['SELECT', 'WHERE', 'ORDER BY DESC', 'LIMIT', 'INNER JOIN', 'DISTINCT', 'OR'],
+  esquema: `
+CREATE TABLE linhas (id INTEGER, titular TEXT, numero TEXT, operadora TEXT);
+INSERT INTO linhas VALUES
+ (1,'Neusa Dantas','(31) 99814-2207','Vivo'),
+ (2,'Gilmar Espósito','(31) 99120-7743','Claro'),
+ (3,'Wanderley Pinho','(31) 98455-0091','TIM'),
+ (4,'Solange Tibúrcio','(31) 99677-3388','Vivo'),
+ (5,'Roberto Íris','(31) 98201-5566','Claro'),
+ (6,'Marina Quadros','(31) 99043-1180','TIM');
+
+CREATE TABLE antenas (id INTEGER, codigo TEXT, bairro TEXT, endereco TEXT);
+INSERT INTO antenas VALUES
+ (1,'BH-ERB-042','Savassi','Rua Antônio de Albuquerque, 500'),
+ (2,'BH-ERB-118','Buritis','Rua Dom Bosco, 1240'),
+ (3,'BH-ERB-207','Barreiro','Av. Afonso Vaz de Melo, 330'),
+ (4,'BH-ERB-091','Santa Efigênia','Rua Cristina, 88'),
+ (5,'BH-ERB-310','Contagem','Av. João César de Oliveira, 1500');
+
+CREATE TABLE registros (id INTEGER, linha_id INTEGER, antena_id INTEGER, ts TEXT, tipo TEXT);
+INSERT INTO registros VALUES
+ (1,1,1,'2026-08-11 17:40:00','dados'),
+ (2,1,1,'2026-08-11 18:22:00','chamada'),
+ (3,1,2,'2026-08-11 18:55:00','dados'),
+ (4,1,2,'2026-08-11 19:04:00','chamada'),
+ (5,1,2,'2026-08-11 19:31:00','dados'),
+ (6,1,2,'2026-08-11 19:58:00','sms'),
+ (7,1,5,'2026-08-11 20:12:00','dados'),
+ (8,3,2,'2026-08-11 18:22:00','chamada'),
+ (9,3,2,'2026-08-11 18:47:00','dados'),
+ (10,3,2,'2026-08-11 19:40:00','dados'),
+ (11,3,5,'2026-08-11 20:10:00','dados'),
+ (12,3,5,'2026-08-11 20:44:00','chamada'),
+ (13,2,1,'2026-08-11 18:30:00','dados'),
+ (14,2,1,'2026-08-11 19:10:00','chamada'),
+ (15,2,1,'2026-08-11 20:00:00','dados'),
+ (16,4,3,'2026-08-11 18:50:00','dados'),
+ (17,4,3,'2026-08-11 19:20:00','chamada'),
+ (18,5,2,'2026-08-11 18:00:00','dados'),
+ (19,5,2,'2026-08-11 19:15:00','dados'),
+ (20,5,2,'2026-08-11 22:30:00','dados'),
+ (21,6,4,'2026-08-11 19:45:00','chamada'),
+ (22,6,4,'2026-08-11 20:30:00','dados');
+
+CREATE TABLE chamadas (id INTEGER, origem TEXT, destino TEXT, ts TEXT, duracao_seg INTEGER);
+INSERT INTO chamadas VALUES
+ (1,'(31) 98201-5566','(31) 98455-0091','2026-08-11 18:05:00',30),
+ (2,'(31) 98455-0091','(31) 99814-2207','2026-08-11 18:22:00',42),
+ (3,'(31) 99814-2207','(31) 99677-3388','2026-08-11 19:04:00',18),
+ (4,'(31) 99120-7743','(31) 99814-2207','2026-08-11 19:10:00',0),
+ (5,'(31) 99677-3388','(31) 99814-2207','2026-08-11 19:20:00',0),
+ (6,'(31) 98455-0091','(31) 98201-5566','2026-08-11 20:44:00',95),
+ (7,'(31) 99043-1180','(31) 99814-2207','2026-08-11 21:15:00',0),
+ (8,'(31) 99043-1180','(31) 99814-2207','2026-08-11 22:40:00',0);
+`,
+  pistas: [
+    { titulo: 'De quem é a linha',
+      pergunta: 'A irmã passou o número dela: <code>(31) 99814-2207</code>. Traga <b>titular, numero e operadora</b> dessa linha.',
+      dica: 'Um filtro de igualdade com texto: <code>WHERE numero = \'(31) 99814-2207\'</code> — o valor entre aspas simples, exatamente como está na tabela.',
+      solucao: "SELECT titular, numero, operadora FROM linhas WHERE numero = '(31) 99814-2207'" },
+    { titulo: 'Os últimos sinais',
+      pergunta: 'A linha dela é a de <code>id = 1</code>. Traga os <b>três registros mais recentes</b> dessa linha, com <b>ts, antena_id e tipo</b>, do mais novo para o mais antigo.',
+      dica: '<code>ORDER BY ts DESC</code> inverte a ordem e <code>LIMIT 3</code> corta nos três primeiros.',
+      ordenado: true,
+      solucao: "SELECT ts, antena_id, tipo FROM registros WHERE linha_id = 1 ORDER BY ts DESC LIMIT 3" },
+    { titulo: 'O trajeto com nome de bairro',
+      pergunta: 'Um número de antena não diz nada. Junte <code>registros</code> com <code>antenas</code> e traga <b>ts, codigo e bairro</b> de todo o trajeto da linha 1, do mais antigo para o mais recente.',
+      dica: '<code>FROM registros r JOIN antenas a ON a.id = r.antena_id</code> e ordene por <code>r.ts</code>.',
+      ordenado: true,
+      solucao: "SELECT r.ts, a.codigo, a.bairro FROM registros r JOIN antenas a ON a.id = r.antena_id WHERE r.linha_id = 1 ORDER BY r.ts" },
+    { titulo: 'Quem mais estava lá',
+      pergunta: 'O último sinal dela veio da antena <code>BH-ERB-310</code>, em Contagem. Descubra <b>quais titulares</b> passaram por essa antena entre <b>20:00 e 23:00</b> daquele dia. Traga <b>titular e numero</b>, sem repetir, em ordem alfabética.',
+      dica: 'São dois JOINs a partir de <code>registros</code> — um para <code>linhas</code>, outro para <code>antenas</code>. Use <code>DISTINCT</code> e <code>BETWEEN</code> com as datas completas.',
+      ordenado: true,
+      solucao: "SELECT DISTINCT l.titular, l.numero FROM registros r JOIN linhas l ON l.id = r.linha_id JOIN antenas a ON a.id = r.antena_id WHERE a.codigo = 'BH-ERB-310' AND r.ts BETWEEN '2026-08-11 20:00:00' AND '2026-08-11 23:00:00' ORDER BY l.titular" },
+    { titulo: 'Quem ligou para ela',
+      pergunta: 'Traga todas as chamadas em que o número dela aparece — <b>como origem ou como destino</b>. Colunas: <b>ts, origem, destino, duracao_seg</b>, da mais antiga para a mais recente.',
+      dica: 'Duas condições com <code>OR</code>, e parênteses em volta delas: <code>WHERE (origem = \'...\' OR destino = \'...\')</code>. Uma duração igual a 0 significa chamada não atendida.',
+      ordenado: true,
+      solucao: "SELECT ts, origem, destino, duracao_seg FROM chamadas WHERE (origem = '(31) 99814-2207' OR destino = '(31) 99814-2207') ORDER BY ts" }
+  ],
+  suspeitos: [
+    { nome: 'Wanderley Pinho', papel: 'Dono do apartamento', nota: 'Ligou para ela às 18h22 e já estava no Buritis.' },
+    { nome: 'Gilmar Espósito', papel: 'Corretor concorrente', nota: 'Tentou ligar às 19h10, mas passou a noite inteira na Savassi.' },
+    { nome: 'Solange Tibúrcio', papel: 'Cliente da visita', nota: 'Marcou a visita e ficou no Barreiro a noite toda.' },
+    { nome: 'Roberto Íris', papel: 'Porteiro do prédio', nota: 'Fica na mesma antena do Buritis das 18h às 22h — é o posto dele.' }
+  ],
+  culpado: 'Wanderley Pinho',
+  desfecho: 'O celular de Neusa saltou do Buritis para Contagem às 20h12. O de Wanderley Pinho fez exatamente o mesmo salto dois minutos antes, às 20h10 — e foi o único além dela naquela antena. Ele havia ligado às 18h22 para confirmar a visita e, às 20h44, ligou para o porteiro pedindo que "não registrasse ninguém depois das sete". O apartamento estava em nome dele e em processo de penhora.'
+},
+
+/* --------------------------------------------- A CARGA FANTASMA (fácil) */
+{
+  id: 'carga', nivel: 'facil', dataset: 'logistica',
+  titulo: 'A Carga Fantasma',
+  local: 'BR-364 · junho de 2026',
+  resumo: 'Saíram 600 caixas de Manaus. Chegaram 420 em São Paulo. Ninguém parou o caminhão.',
+  briefing: 'Três viagens da mesma transportadora chegaram com menos caixas do que saíram — e nenhuma delas registrou ocorrência de roubo. A carga não sumiu na estrada: sumiu parada. Cada viagem guarda quantas caixas saíram e quantas chegaram, e cada parada no caminho vira uma linha em <code>paradas</code>, com quanto tempo o caminhão ficou ali.',
+  conceitos: ['Comparação entre colunas', 'Coluna calculada', 'AS (apelido)', 'INNER JOIN', 'JOIN de 3 tabelas'],
+  esquema: `
+CREATE TABLE motoristas (id INTEGER, nome TEXT, cnh TEXT, base TEXT);
+INSERT INTO motoristas VALUES
+ (1,'Valdir Camargo','02711830940','Manaus'),
+ (2,'Edilson Boaventura','03882147700','Cuiabá'),
+ (3,'Rosimeire Falcão','01559003120','Goiânia'),
+ (4,'Antenor Guedes','04991072550','Manaus'),
+ (5,'Cleide Barbosa','06223348190','São Paulo'),
+ (6,'Josias Tenório','07331186020','Belém');
+
+CREATE TABLE viagens (id INTEGER, motorista_id INTEGER, placa TEXT, origem TEXT, destino TEXT, saida TEXT, chegada TEXT, caixas_saida INTEGER, caixas_chegada INTEGER);
+INSERT INTO viagens VALUES
+ (1,1,'QPT-4C19','Manaus','São Paulo','2026-06-02 05:10:00','2026-06-05 21:40:00',600,420),
+ (2,2,'RKD-8B02','Cuiabá','São Paulo','2026-06-02 06:00:00','2026-06-03 19:20:00',340,340),
+ (3,3,'PVX-1A77','Goiânia','Belo Horizonte','2026-06-04 07:30:00','2026-06-04 20:15:00',220,220),
+ (4,4,'QPT-4C19','Manaus','Campinas','2026-06-08 04:50:00','2026-06-11 18:05:00',580,455),
+ (5,5,'SLB-6F41','São Paulo','Curitiba','2026-06-09 08:00:00','2026-06-09 17:30:00',150,150),
+ (6,1,'QPT-4C19','Manaus','São Paulo','2026-06-14 05:05:00','2026-06-17 22:10:00',620,620),
+ (7,6,'TMN-2D88','Belém','Recife','2026-06-15 06:20:00','2026-06-17 09:40:00',410,410),
+ (8,4,'RKD-8B02','Manaus','São Paulo','2026-06-18 05:00:00','2026-06-21 20:50:00',640,505),
+ (9,3,'PVX-1A77','Goiânia','São Paulo','2026-06-20 07:00:00','2026-06-20 23:15:00',260,260),
+ (10,2,'TMN-2D88','Cuiabá','Salvador','2026-06-22 06:45:00','2026-06-24 15:30:00',300,300);
+
+CREATE TABLE paradas (id INTEGER, viagem_id INTEGER, local TEXT, cidade TEXT, entrada TEXT, duracao_min INTEGER);
+INSERT INTO paradas VALUES
+ (1,1,'Posto Águia Dourada','Porto Velho','2026-06-03 11:20:00',45),
+ (2,1,'Pátio Redentor','Cuiabá','2026-06-04 02:40:00',215),
+ (3,1,'Posto Rota 70','Rondonópolis','2026-06-04 18:10:00',60),
+ (4,2,'Posto Rota 70','Rondonópolis','2026-06-02 15:35:00',40),
+ (5,3,'Posto Trevo','Barretos','2026-06-04 14:05:00',25),
+ (6,4,'Posto Bandeirante','Humaitá','2026-06-09 09:15:00',50),
+ (7,4,'Pátio Redentor','Cuiabá','2026-06-10 01:50:00',240),
+ (8,4,'Posto Trevo','Barretos','2026-06-11 09:40:00',35),
+ (9,5,'Posto Bandeirante','Sorocaba','2026-06-09 12:10:00',20),
+ (10,6,'Posto Águia Dourada','Porto Velho','2026-06-15 10:50:00',55),
+ (11,6,'Pátio Central','Cuiabá','2026-06-16 03:05:00',180),
+ (12,6,'Posto Trevo','Barretos','2026-06-17 12:30:00',30),
+ (13,7,'Pátio Norte','Teresina','2026-06-16 08:20:00',150),
+ (14,8,'Pátio Redentor','Cuiabá','2026-06-19 23:30:00',195),
+ (15,8,'Posto Sol Nascente','Araçatuba','2026-06-21 10:05:00',40),
+ (16,9,'Posto Sol Nascente','Araçatuba','2026-06-20 16:45:00',35),
+ (17,10,'Pátio Central','Cuiabá','2026-06-23 04:20:00',130);
+
+CREATE TABLE patios (id INTEGER, nome TEXT, cidade TEXT, responsavel TEXT);
+INSERT INTO patios VALUES
+ (1,'Pátio Redentor','Cuiabá','Nivaldo Sarmento'),
+ (2,'Pátio Central','Cuiabá','Iracema Bonfim'),
+ (3,'Pátio Norte','Teresina','Jocelino Prata'),
+ (4,'Pátio Sul','Curitiba','Amauri Vasques');
+`,
+  pistas: [
+    { titulo: 'Onde a conta não fecha',
+      pergunta: 'Traga <b>id, placa, caixas_saida e caixas_chegada</b> das viagens em que <b>chegou menos do que saiu</b>, ordenado por id.',
+      dica: 'Dá para comparar duas colunas entre si, sem número nenhum: <code>WHERE caixas_chegada &lt; caixas_saida</code>.',
+      ordenado: true,
+      solucao: "SELECT id, placa, caixas_saida, caixas_chegada FROM viagens WHERE caixas_chegada < caixas_saida ORDER BY id" },
+    { titulo: 'Quantas sumiram',
+      pergunta: 'Crie uma coluna com a diferença. Traga <b>id, placa</b> e <code>caixas_saida - caixas_chegada</code> apelidada de <code>faltando</code>, só das viagens com falta, da maior perda para a menor.',
+      dica: 'O SELECT aceita conta: <code>SELECT id, placa, caixas_saida - caixas_chegada AS faltando</code>. E dá para ordenar pelo apelido: <code>ORDER BY faltando DESC</code>.',
+      ordenado: true,
+      solucao: "SELECT id, placa, caixas_saida - caixas_chegada AS faltando FROM viagens WHERE caixas_chegada < caixas_saida ORDER BY faltando DESC" },
+    { titulo: 'Quem estava na direção',
+      pergunta: 'Junte com <code>motoristas</code> e traga <b>nome, base, o id da viagem</b> e a coluna <code>faltando</code>, só das viagens com falta, da maior perda para a menor.',
+      dica: '<code>FROM viagens v JOIN motoristas m ON m.id = v.motorista_id</code>. Repare que dois motoristas diferentes aparecem — então o problema não é o motorista.',
+      ordenado: true,
+      solucao: "SELECT m.nome, m.base, v.id, v.caixas_saida - v.caixas_chegada AS faltando FROM viagens v JOIN motoristas m ON m.id = v.motorista_id WHERE v.caixas_chegada < v.caixas_saida ORDER BY faltando DESC" },
+    { titulo: 'Paradas longas demais',
+      pergunta: 'Um caminhão carregado não fica parado à toa. Traga <b>local, cidade e duracao_min</b> das paradas de <b>150 minutos ou mais</b>, da mais longa para a mais curta.',
+      dica: 'Filtro simples com <code>&gt;=</code> e um <code>ORDER BY duracao_min DESC</code>.',
+      ordenado: true,
+      solucao: "SELECT local, cidade, duracao_min FROM paradas WHERE duracao_min >= 150 ORDER BY duracao_min DESC" },
+    { titulo: 'Um pátio, três viagens',
+      pergunta: 'Cruze as três tabelas: <code>paradas</code>, <code>viagens</code> e <code>patios</code>. Traga <b>o nome do pátio como <code>patio</code>, o responsavel, o id da viagem</b> e a coluna <code>faltando</code>, apenas das paradas de <b>150 minutos ou mais</b> em viagens que perderam carga. Ordene pelo id da viagem.',
+      dica: 'Ligue <code>paradas</code> a <code>viagens</code> por <code>v.id = p.viagem_id</code> e a <code>patios</code> por <code>pt.nome = p.local</code>. Os dois filtros vão no mesmo <code>WHERE</code>, com <code>AND</code>.',
+      ordenado: true,
+      solucao: "SELECT pt.nome AS patio, pt.responsavel, v.id, v.caixas_saida - v.caixas_chegada AS faltando FROM paradas p JOIN viagens v ON v.id = p.viagem_id JOIN patios pt ON pt.nome = p.local WHERE p.duracao_min >= 150 AND v.caixas_chegada < v.caixas_saida ORDER BY v.id" }
+  ],
+  suspeitos: [
+    { nome: 'Nivaldo Sarmento', papel: 'Responsável pelo Pátio Redentor', nota: 'Cuiabá. As três viagens com falta pararam ali por mais de três horas.' },
+    { nome: 'Iracema Bonfim', papel: 'Responsável pelo Pátio Central', nota: 'Cuiabá. Recebeu paradas longas, mas nenhuma viagem com falta.' },
+    { nome: 'Antenor Guedes', papel: 'Motorista, base Manaus', nota: 'Dirigiu duas das três viagens com falta — e outras sem falta nenhuma.' },
+    { nome: 'Valdir Camargo', papel: 'Motorista, base Manaus', nota: 'Dirigiu uma viagem com falta e outra, idêntica, sem perder uma caixa.' }
+  ],
+  culpado: 'Nivaldo Sarmento',
+  desfecho: 'Os motoristas mudaram, as placas mudaram, os destinos mudaram. O que não mudou foi o Pátio Redentor: as três viagens que perderam carga pararam ali de madrugada, por 195, 215 e 240 minutos. A viagem de Valdir que chegou completa parou no Pátio Central, do outro lado da mesma cidade. Nivaldo Sarmento controlava o portão, o registro de entrada e a única câmera — que, nas três noites, estava "em manutenção".'
+},
+
+/* --------------------------------------------- O ALVARÁ DA MEIA-NOITE (fácil) */
+{
+  id: 'alvara', nivel: 'facil', dataset: 'fiscalizacao',
+  titulo: 'O Alvará da Meia-Noite',
+  local: 'Vila Redonda · 18 de abril de 2026',
+  resumo: 'Este caso não tem assassino. Tem uma assinatura.',
+  briefing: 'Um incêndio tomou a Casa Andorinha durante um baile lotado. Ninguém ateou fogo: a investigação é sobre o que deveria ter impedido aquilo e não impediu — o alvará, a vistoria, a lotação. Aqui você vai aprender a procurar o que <b>não existe</b> no banco: a vistoria que nunca aconteceu não deixa linha nenhuma, e achar essa ausência é uma técnica própria. <i>Caso ficcional; nomes, empresas e endereços são inventados.</i>',
+  conceitos: ['WHERE com datas', 'Comparação entre tabelas', 'JOIN de 3 tabelas', 'LEFT JOIN', 'IS NULL (anti-join)'],
+  esquema: `
+CREATE TABLE fiscais (id INTEGER, nome TEXT, matricula TEXT, setor TEXT);
+INSERT INTO fiscais VALUES
+ (1,'Ubirajara Penteado','F-2201','Posturas'),
+ (2,'Neusa Galvão','F-1980','Posturas'),
+ (3,'Adair Monteiro','F-3115','Vigilância Sanitária'),
+ (4,'Cristiane Lousã','F-2744','Posturas');
+
+CREATE TABLE estabelecimentos (id INTEGER, nome TEXT, tipo TEXT, bairro TEXT, capacidade_alvara INTEGER);
+INSERT INTO estabelecimentos VALUES
+ (1,'Casa Andorinha','casa de shows','Centro',480),
+ (2,'Galpão Quatorze','casa de shows','Beira-Rio',900),
+ (3,'Clube do Trovador','casa de shows','Vila Nova',350),
+ (4,'Bar do Zuza','bar','Centro',120),
+ (5,'Teatro Municipal','teatro','Centro',640),
+ (6,'Boate Meia-Lua','casa de shows','Alto da Serra',260),
+ (7,'Restaurante Pau-Brasil','restaurante','Jardim Aurora',180);
+
+CREATE TABLE alvaras (id INTEGER, estabelecimento_id INTEGER, tipo TEXT, emissao TEXT, validade TEXT, situacao TEXT, fiscal_id INTEGER);
+INSERT INTO alvaras VALUES
+ (1,1,'funcionamento','2025-03-10','2026-03-10','vencido',1),
+ (2,1,'sanitario','2025-05-02','2027-05-02','valido',3),
+ (3,2,'funcionamento','2025-11-20','2026-11-20','valido',2),
+ (4,2,'sanitario','2025-11-28','2026-11-28','valido',3),
+ (5,3,'funcionamento','2024-09-15','2025-09-15','vencido',4),
+ (6,3,'sanitario','2025-02-10','2027-02-10','valido',3),
+ (7,4,'funcionamento','2026-01-08','2027-01-08','valido',2),
+ (8,5,'funcionamento','2025-06-30','2026-06-30','valido',4),
+ (9,6,'funcionamento','2025-12-01','2026-12-01','valido',1),
+ (10,6,'sanitario','2026-01-15','2028-01-15','valido',3),
+ (11,7,'funcionamento','2025-08-22','2026-08-22','valido',4),
+ (12,7,'sanitario','2025-08-25','2027-08-25','valido',3);
+
+CREATE TABLE vistorias (id INTEGER, estabelecimento_id INTEGER, orgao TEXT, data TEXT, resultado TEXT, fiscal_id INTEGER);
+INSERT INTO vistorias VALUES
+ (1,2,'Corpo de Bombeiros','2025-11-22','aprovado',2),
+ (2,3,'Corpo de Bombeiros','2024-09-10','aprovado',4),
+ (3,1,'Vigilância Sanitária','2025-05-01','aprovado',3),
+ (4,1,'Posturas','2025-03-08','aprovado',1),
+ (5,4,'Corpo de Bombeiros','2026-01-05','aprovado',2),
+ (6,5,'Corpo de Bombeiros','2025-06-27','aprovado',4),
+ (7,6,'Corpo de Bombeiros','2025-11-28','ressalvas',1),
+ (8,7,'Vigilância Sanitária','2025-08-24','aprovado',3),
+ (9,2,'Posturas','2025-11-18','aprovado',2),
+ (10,5,'Posturas','2025-06-28','aprovado',4);
+
+CREATE TABLE eventos (id INTEGER, estabelecimento_id INTEGER, nome_evento TEXT, data TEXT, ingressos_vendidos INTEGER);
+INSERT INTO eventos VALUES
+ (1,1,'Baile do Cordão Vermelho','2026-04-18',730),
+ (2,1,'Noite do Sertanejo','2026-03-21',505),
+ (3,2,'Festival Beira-Rio','2026-02-14',860),
+ (4,3,'Forró do Trovador','2026-04-04',340),
+ (5,6,'Baile Black','2026-03-28',300),
+ (6,5,'Ópera de Câmara','2026-04-10',590),
+ (7,1,'Rock do Centro','2026-01-31',460),
+ (8,2,'Virada Beira-Rio','2026-04-11',910);
+
+CREATE TABLE saidas_emergencia (id INTEGER, estabelecimento_id INTEGER, identificacao TEXT, estado TEXT);
+INSERT INTO saidas_emergencia VALUES
+ (1,1,'Saída A - lateral','liberada'),
+ (2,1,'Saída B - fundos','trancada'),
+ (3,1,'Saída C - palco','obstruida'),
+ (4,2,'Saída A','liberada'),
+ (5,2,'Saída B','liberada'),
+ (6,3,'Saída única','obstruida'),
+ (7,6,'Saída A','liberada'),
+ (8,5,'Saída A','liberada'),
+ (9,5,'Saída B','liberada');
+`,
+  pistas: [
+    { titulo: 'As casas de show da cidade',
+      pergunta: 'Comece pelo cadastro. Traga <b>nome, bairro e capacidade_alvara</b> dos estabelecimentos do tipo <code>casa de shows</code>, da maior capacidade para a menor.',
+      dica: 'Um <code>WHERE tipo = \'casa de shows\'</code> e um <code>ORDER BY capacidade_alvara DESC</code>.',
+      ordenado: true,
+      solucao: "SELECT nome, bairro, capacidade_alvara FROM estabelecimentos WHERE tipo = 'casa de shows' ORDER BY capacidade_alvara DESC" },
+    { titulo: 'Papel vencido',
+      pergunta: 'O incêndio foi em <b>18/04/2026</b>. Traga <b>o nome do estabelecimento, o tipo do alvará e a validade</b> de todo alvará que já estava vencido nessa data, do mais antigo para o mais recente.',
+      dica: 'Data em texto no formato <code>AAAA-MM-DD</code> pode ser comparada direto: <code>WHERE a.validade &lt; \'2026-04-18\'</code>. Junte com <code>estabelecimentos</code> para ter o nome.',
+      ordenado: true,
+      solucao: "SELECT e.nome, a.tipo, a.validade FROM alvaras a JOIN estabelecimentos e ON e.id = a.estabelecimento_id WHERE a.validade < '2026-04-18' ORDER BY a.validade" },
+    { titulo: 'Gente demais lá dentro',
+      pergunta: 'Compare os ingressos vendidos com a capacidade autorizada. Traga <b>o nome do estabelecimento, nome_evento, data, ingressos_vendidos e capacidade_alvara</b> dos eventos em que se vendeu <b>mais do que cabia</b>, por data.',
+      dica: 'O <code>WHERE</code> compara colunas de tabelas diferentes depois do JOIN: <code>WHERE ev.ingressos_vendidos &gt; es.capacidade_alvara</code>.',
+      ordenado: true,
+      solucao: "SELECT es.nome, ev.nome_evento, ev.data, ev.ingressos_vendidos, es.capacidade_alvara FROM eventos ev JOIN estabelecimentos es ON es.id = ev.estabelecimento_id WHERE ev.ingressos_vendidos > es.capacidade_alvara ORDER BY ev.data" },
+    { titulo: 'Quem assinou',
+      pergunta: 'Todo alvará tem um fiscal responsável. Junte <code>alvaras</code>, <code>estabelecimentos</code> e <code>fiscais</code> e traga <b>o nome do estabelecimento, o nome do fiscal como <code>fiscal</code>, emissao e validade</b> dos alvarás do tipo <code>funcionamento</code>, em ordem alfabética de estabelecimento.',
+      dica: 'Dois JOINs a partir de <code>alvaras</code>: um por <code>estabelecimento_id</code>, outro por <code>fiscal_id</code>. Use <code>AS fiscal</code> para o nome do fiscal não brigar com o nome do estabelecimento.',
+      ordenado: true,
+      solucao: "SELECT e.nome, f.nome AS fiscal, a.emissao, a.validade FROM alvaras a JOIN estabelecimentos e ON e.id = a.estabelecimento_id JOIN fiscais f ON f.id = a.fiscal_id WHERE a.tipo = 'funcionamento' ORDER BY e.nome" },
+    { titulo: 'A vistoria que nunca houve',
+      pergunta: 'Agora a técnica nova: encontre os estabelecimentos que <b>nunca</b> receberam vistoria do <code>Corpo de Bombeiros</code>. Traga <b>nome, tipo e capacidade_alvara</b>, em ordem alfabética.',
+      dica: 'Use <code>LEFT JOIN vistorias v ON v.estabelecimento_id = e.id AND v.orgao = \'Corpo de Bombeiros\'</code> — repare que a condição do órgão vai no <code>ON</code>, não no <code>WHERE</code> — e depois filtre <code>WHERE v.id IS NULL</code>. O LEFT JOIN mantém quem não tem par, e o IS NULL isola exatamente esses.',
+      ordenado: true,
+      solucao: "SELECT e.nome, e.tipo, e.capacidade_alvara FROM estabelecimentos e LEFT JOIN vistorias v ON v.estabelecimento_id = e.id AND v.orgao = 'Corpo de Bombeiros' WHERE v.id IS NULL ORDER BY e.nome" }
+  ],
+  suspeitos: [
+    { nome: 'Ubirajara Penteado', papel: 'Fiscal de Posturas · F-2201', nota: 'Assinou o alvará de funcionamento da Casa Andorinha.' },
+    { nome: 'Neusa Galvão', papel: 'Fiscal de Posturas · F-1980', nota: 'Só assinou alvarás de casas com vistoria do Corpo de Bombeiros aprovada.' },
+    { nome: 'Adair Monteiro', papel: 'Vigilância Sanitária · F-3115', nota: 'Responde por alvará sanitário, não por lotação nem por incêndio.' },
+    { nome: 'Cristiane Lousã', papel: 'Fiscal de Posturas · F-2744', nota: 'Assinou o alvará do Clube do Trovador, que venceu e não foi renovado.' }
+  ],
+  culpado: 'Ubirajara Penteado',
+  desfecho: 'A Casa Andorinha operava com alvará de funcionamento vencido desde 10 de março, com 730 pessoas num salão autorizado para 480 e com duas das três saídas de emergência trancadas ou obstruídas. Nada disso foi o começo: a casa nunca recebeu uma única vistoria do Corpo de Bombeiros, em nenhum ano. Ubirajara Penteado assinou o alvará de funcionamento dois dias depois de uma vistoria de Posturas feita por ele mesmo, sem o laudo dos bombeiros que a própria lei municipal exigia — e repetiu o padrão na Boate Meia-Lua, aprovada "com ressalvas" que nunca foram cobradas.'
+},
+
+/* --------------------------------------------- A LICITAÇÃO DE FACHADA (médio) */
+{
+  id: 'licitacao', nivel: 'medio', dataset: 'compras',
+  titulo: 'A Licitação de Fachada',
+  local: 'Prefeitura de Vila Redonda · auditoria 2026',
+  resumo: 'Três concorrentes disputaram. Os três são a mesma família.',
+  briefing: 'A Secretaria de Educação comprou kits escolares duas vezes em um ano, sempre com três propostas quase idênticas, sempre vencidas por empresas abertas semanas antes do edital. O truque tem nome: <b>propostas de cobertura</b> — duas empresas participam só para dar aparência de disputa. O que entrega o esquema é o <b>quadro societário</b>: para achar sócios em comum entre empresas diferentes, você junta a tabela de sócios <b>com ela mesma</b>.',
+  conceitos: ['GROUP BY com JOIN', 'SAFE_DIVIDE', 'self-join', 'HAVING', 'COUNT(DISTINCT)', 'subconsulta aninhada'],
+  esquema: `
+CREATE TABLE empresas (id INTEGER, razao_social TEXT, cnpj TEXT, cidade TEXT, abertura TEXT, capital_social REAL);
+INSERT INTO empresas VALUES
+ (1,'Aurora Distribuidora de Materiais Ltda','18.402.775/0001-60','Vila Redonda','2025-02-10',20000),
+ (2,'Boreal Comércio e Serviços ME','43.118.902/0001-05','Vila Redonda','2025-02-17',15000),
+ (3,'Cristalina Suprimentos Eireli','29.660.147/0001-88','Vila Redonda','2025-02-24',18000),
+ (4,'Papelaria Estrela do Norte Ltda','05.771.330/0001-21','Vila Redonda','2014-07-03',250000),
+ (5,'Uniformes Bandeirante SA','11.209.844/0001-47','Serra Azul','2009-11-19',1200000),
+ (6,'Marcenaria Guanabara Ltda','32.885.013/0001-72','Vila Redonda','2018-03-28',90000),
+ (7,'Tecno Escolar Comércio Ltda','26.447.590/0001-13','Serra Azul','2016-05-14',400000);
+
+CREATE TABLE socios (id INTEGER, empresa_id INTEGER, nome TEXT, cpf TEXT, participacao REAL);
+INSERT INTO socios VALUES
+ (1,1,'Jurandir Bastos Neto','482.117.930-05',80),
+ (2,1,'Marilda Soares Bastos','311.204.876-40',20),
+ (3,2,'Marilda Soares Bastos','311.204.876-40',70),
+ (4,2,'Edgar Bastos Filho','598.330.112-79',30),
+ (5,3,'Jurandir Bastos Neto','482.117.930-05',60),
+ (6,3,'Edgar Bastos Filho','598.330.112-79',40),
+ (7,4,'Terezinha Lambert','204.998.317-62',100),
+ (8,5,'Otacílio Meireles Jr','150.773.402-98',50),
+ (9,5,'Lúcia Helena Prado','367.221.559-13',50),
+ (10,6,'Dagoberto Ninho','722.106.845-30',100),
+ (11,7,'Lúcia Helena Prado','367.221.559-13',100);
+
+CREATE TABLE licitacoes (id INTEGER, numero TEXT, objeto TEXT, orgao TEXT, data TEXT, valor_estimado REAL);
+INSERT INTO licitacoes VALUES
+ (1,'PE-2025/014','Kits escolares - 12.000 unidades','Secretaria de Educação','2025-06-11',1450000),
+ (2,'PE-2025/027','Uniformes escolares','Secretaria de Educação','2025-08-05',980000),
+ (3,'PE-2025/039','Mobiliário para salas de aula','Secretaria de Educação','2025-10-02',620000),
+ (4,'PE-2026/003','Material de expediente','Secretaria de Administração','2026-02-18',310000),
+ (5,'PE-2026/011','Kits escolares - reposição','Secretaria de Educação','2026-04-09',880000);
+
+CREATE TABLE propostas (id INTEGER, licitacao_id INTEGER, empresa_id INTEGER, valor REAL, classificacao INTEGER);
+INSERT INTO propostas VALUES
+ (1,1,1,1438000,1),(2,1,2,1441500,2),(3,1,3,1444900,3),
+ (4,2,5,962000,1),(5,2,7,971500,2),(6,2,1,1050000,3),
+ (7,3,6,598000,1),(8,3,4,640000,2),
+ (9,4,4,288000,1),(10,4,7,295000,2),(11,4,1,301000,3),
+ (12,5,3,874500,1),(13,5,1,877900,2),(14,5,2,879200,3);
+
+CREATE TABLE contratos (id INTEGER, licitacao_id INTEGER, empresa_id INTEGER, valor_contratado REAL, valor_pago REAL, assinatura TEXT);
+INSERT INTO contratos VALUES
+ (1,1,1,1438000,1438000,'2025-06-25'),
+ (2,2,5,962000,962000,'2025-08-20'),
+ (3,3,6,598000,598000,'2025-10-16'),
+ (4,4,4,288000,288000,'2026-03-02'),
+ (5,5,3,874500,874500,'2026-04-22');
+`,
+  pistas: [
+    { titulo: 'Quem aparece sempre',
+      pergunta: 'Conte a participação de cada empresa nas licitações. Traga <b>razao_social, cidade</b>, a quantidade de propostas como <code>propostas</code> e a menor proposta apresentada como <code>menor_proposta</code>, da mais participativa para a menos.',
+      dica: '<code>FROM propostas p JOIN empresas e ON e.id = p.empresa_id</code>, depois <code>GROUP BY e.razao_social, e.cidade</code> com <code>COUNT(*)</code> e <code>MIN(p.valor)</code>.',
+      solucao: "SELECT e.razao_social, e.cidade, COUNT(*) AS propostas, MIN(p.valor) AS menor_proposta FROM propostas p JOIN empresas e ON e.id = p.empresa_id GROUP BY e.razao_social, e.cidade ORDER BY propostas DESC" },
+    { titulo: 'Contrato maior que a empresa',
+      pergunta: 'Compare o que a empresa recebeu com o capital que ela declarou ter. Traga <b>razao_social, abertura, capital_social, valor_pago</b> e a razão <code>valor_pago / capital_social</code> arredondada em 1 casa como <code>vezes_o_capital</code>, do maior para o menor.',
+      dica: '<code>ROUND(SAFE_DIVIDE(c.valor_pago, e.capital_social), 1)</code>. Uma empresa que recebe dezenas de vezes o próprio capital não tem estrutura para entregar o que vendeu.',
+      ordenado: true,
+      solucao: "SELECT e.razao_social, e.abertura, e.capital_social, c.valor_pago, ROUND(SAFE_DIVIDE(c.valor_pago, e.capital_social), 1) AS vezes_o_capital FROM contratos c JOIN empresas e ON e.id = c.empresa_id ORDER BY vezes_o_capital DESC" },
+    { titulo: 'Sócio de duas casas',
+      pergunta: 'Junte a tabela <code>socios</code> <b>com ela mesma</b> para achar quem é sócio de mais de uma empresa. Traga <b>o nome do sócio, o cpf</b> e as duas razões sociais como <code>empresa_a</code> e <code>empresa_b</code>, em ordem alfabética de nome.',
+      dica: 'O truque é comparar duas cópias da mesma tabela: <code>FROM socios s1 JOIN socios s2 ON s2.cpf = s1.cpf AND s2.empresa_id &gt; s1.empresa_id</code>. O <code>&gt;</code> evita que cada par apareça duas vezes e que a linha se junte consigo mesma. Depois junte <code>empresas</code> duas vezes, com apelidos diferentes.',
+      ordenado: true,
+      solucao: "SELECT s1.nome, s1.cpf, ea.razao_social AS empresa_a, eb.razao_social AS empresa_b FROM socios s1 JOIN socios s2 ON s2.cpf = s1.cpf AND s2.empresa_id > s1.empresa_id JOIN empresas ea ON ea.id = s1.empresa_id JOIN empresas eb ON eb.id = s2.empresa_id ORDER BY s1.nome" },
+    { titulo: 'Disputa de mentira',
+      pergunta: 'Numa disputa real as propostas ficam longe umas das outras. Para cada licitação com <b>3 ou mais</b> concorrentes, traga <b>numero, objeto</b>, a contagem de empresas como <code>concorrentes</code>, <code>MIN(valor) AS menor</code>, <code>MAX(valor) AS maior</code> e a razão <code>maior / menor</code> arredondada em 3 casas como <code>dispersao</code>. Ordene pela dispersão, da menor para a maior.',
+      dica: '<code>GROUP BY l.numero, l.objeto</code> e <code>HAVING COUNT(DISTINCT p.empresa_id) &gt;= 3</code>. Quanto mais perto de 1,000 a dispersão, mais as propostas foram combinadas.',
+      ordenado: true,
+      solucao: "SELECT l.numero, l.objeto, COUNT(DISTINCT p.empresa_id) AS concorrentes, MIN(p.valor) AS menor, MAX(p.valor) AS maior, ROUND(SAFE_DIVIDE(MAX(p.valor), MIN(p.valor)), 3) AS dispersao FROM propostas p JOIN licitacoes l ON l.id = p.licitacao_id GROUP BY l.numero, l.objeto HAVING COUNT(DISTINCT p.empresa_id) >= 3 ORDER BY dispersao" },
+    { titulo: 'O dinheiro que saiu',
+      pergunta: 'Feche a conta: quanto foi pago às empresas que têm sócio em comum com outra empresa. Traga <b>razao_social, o numero da licitação, valor_pago</b> e a razão <code>valor_pago / valor_estimado</code> arredondada em 2 casas como <code>sobre_estimado</code>, do maior valor pago para o menor.',
+      dica: 'Use uma subconsulta dentro de outra: a de dentro devolve os CPFs que aparecem em mais de uma empresa (<code>GROUP BY cpf HAVING COUNT(DISTINCT empresa_id) &gt; 1</code>), e a do meio transforma esses CPFs em ids de empresa para o <code>WHERE c.empresa_id IN (...)</code>.',
+      ordenado: true,
+      solucao: "SELECT e.razao_social, l.numero, c.valor_pago, ROUND(SAFE_DIVIDE(c.valor_pago, l.valor_estimado), 2) AS sobre_estimado FROM contratos c JOIN empresas e ON e.id = c.empresa_id JOIN licitacoes l ON l.id = c.licitacao_id WHERE c.empresa_id IN (SELECT empresa_id FROM socios WHERE cpf IN (SELECT cpf FROM socios GROUP BY cpf HAVING COUNT(DISTINCT empresa_id) > 1)) ORDER BY c.valor_pago DESC" }
+  ],
+  suspeitos: [
+    { nome: 'Jurandir Bastos Neto', papel: 'Sócio majoritário da Aurora e da Cristalina', nota: 'As duas empresas venceram as duas licitações de kits escolares.' },
+    { nome: 'Marilda Soares Bastos', papel: 'Sócia da Aurora e da Boreal', nota: 'A Boreal nunca venceu nada — só apresentou propostas de cobertura.' },
+    { nome: 'Lúcia Helena Prado', papel: 'Sócia da Bandeirante e da Tecno Escolar', nota: 'Duas empresas antigas, de outra cidade, com dispersão normal nas propostas.' },
+    { nome: 'Terezinha Lambert', papel: 'Dona da Papelaria Estrela do Norte', nota: 'Empresa de 2014, venceu uma licitação abaixo do valor estimado.' }
+  ],
+  culpado: 'Jurandir Bastos Neto',
+  desfecho: 'Aurora, Boreal e Cristalina foram abertas em três semanas consecutivas de fevereiro de 2025, na mesma cidade, com capital somado de R$ 53 mil. Nas duas licitações de kits escolares as três disputaram entre si e mais ninguém, com dispersão de 1,005 — menos de meio por cento entre a menor e a maior proposta. Jurandir Bastos Neto é sócio majoritário das duas que venceram e recebeu R$ 2.312.500, quarenta e oito e setenta e duas vezes o capital declarado de cada empresa. Marilda e Edgar, sócios da terceira, são irmã e filho dele.'
+},
+
+/* --------------------------------------------- O HOMEM ERRADO (difícil) */
+{
+  id: 'revisao', nivel: 'dificil', dataset: 'revisao',
+  titulo: 'O Homem Errado',
+  local: 'Revisão criminal · assalto de 19 de setembro de 2024',
+  resumo: 'Desta vez o trabalho não é achar o culpado. É provar que não foi ele.',
+  briefing: 'Tarcísio Boaventura cumpre 19 anos por um assalto em Serra Azul, entre <b>14h10 e 14h35</b> do dia 19 de setembro de 2024. Ele sempre disse que estava trabalhando a 200 km dali. A Defensoria conseguiu os dados brutos — ponto eletrônico, pedágio, antenas — e a mecânica se inverte: primeiro você <b>derruba a condenação</b>, depois aponta quem realmente estava lá. Provar ausência em SQL tem ferramentas próprias: <code>NOT EXISTS</code>, <code>INTERSECT</code>, <code>EXCEPT</code> e interseção de intervalos de tempo.',
+  conceitos: ['CTE (WITH)', 'Interseção de intervalos', 'NOT EXISTS', 'INTERSECT / EXCEPT', 'LAG()', 'LEFT JOIN com agregação'],
+  esquema: `
+CREATE TABLE pessoas (id INTEGER, nome TEXT, documento TEXT, ocupacao TEXT);
+INSERT INTO pessoas VALUES
+ (1,'Tarcísio Boaventura','RG 14.882.017','Operador de empilhadeira'),
+ (2,'Hermes Caetano Lisboa','RG 22.105.774','Ex-vigilante'),
+ (3,'Nadir Pontual','RG 09.774.331','Motorista'),
+ (4,'Ubaldo Serra','RG 31.220.908','Mecânico'),
+ (5,'Creuza Malheiros','RG 18.663.542','Caixa de supermercado'),
+ (6,'Gilberto Assunção','RG 27.449.186','Vigilante');
+
+CREATE TABLE ponto_eletronico (id INTEGER, pessoa_id INTEGER, empresa TEXT, unidade TEXT, entrada TEXT, saida TEXT);
+INSERT INTO ponto_eletronico VALUES
+ (1,1,'Metalúrgica Vila Redonda','Vila Redonda','2024-09-19 06:02:00','2024-09-19 16:11:00'),
+ (2,5,'Supermercado Bom Preço','Vila Redonda','2024-09-19 13:00:00','2024-09-19 21:05:00'),
+ (3,6,'Segurança Vanguarda','Serra Azul','2024-09-19 06:00:00','2024-09-19 14:00:00'),
+ (4,3,'Transportes Nadir','Vila Redonda','2024-09-19 08:00:00','2024-09-19 12:30:00'),
+ (5,4,'Oficina Serra','Serra Azul','2024-09-19 08:10:00','2024-09-19 18:00:00'),
+ (6,1,'Metalúrgica Vila Redonda','Vila Redonda','2024-09-18 06:05:00','2024-09-18 16:02:00'),
+ (7,1,'Metalúrgica Vila Redonda','Vila Redonda','2024-09-20 06:00:00','2024-09-20 15:50:00');
+
+CREATE TABLE veiculos (placa TEXT, proprietario_id INTEGER, modelo TEXT, cor TEXT);
+INSERT INTO veiculos VALUES
+ ('KQF-7H21',2,'Fiat Uno','branco'),
+ ('MDR-3J08',1,'Honda Biz','preto'),
+ ('LTP-9B44',3,'VW Gol','prata'),
+ ('NHC-5K77',4,'Chevrolet S10','verde'),
+ ('PBX-2M60',6,'Renault Sandero','cinza');
+
+CREATE TABLE pedagios (id INTEGER, placa TEXT, praca TEXT, rodovia TEXT, ts TEXT, sentido TEXT);
+INSERT INTO pedagios VALUES
+ (1,'KQF-7H21','Pedágio Km 142','BR-262','2024-09-19 11:02:00','Serra Azul'),
+ (2,'KQF-7H21','Pedágio Km 142','BR-262','2024-09-19 16:12:00','Vila Redonda'),
+ (3,'LTP-9B44','Pedágio Km 142','BR-262','2024-09-19 07:10:00','Serra Azul'),
+ (4,'NHC-5K77','Pedágio Km 142','BR-262','2024-09-19 06:40:00','Serra Azul'),
+ (5,'PBX-2M60','Pedágio Km 142','BR-262','2024-09-19 05:20:00','Serra Azul'),
+ (6,'PBX-2M60','Pedágio Km 142','BR-262','2024-09-19 15:55:00','Vila Redonda'),
+ (7,'LTP-9B44','Pedágio Km 142','BR-262','2024-09-18 19:00:00','Vila Redonda'),
+ (8,'MDR-3J08','Pedágio Km 142','BR-262','2024-09-14 09:30:00','Serra Azul'),
+ (9,'MDR-3J08','Pedágio Km 142','BR-262','2024-09-14 18:40:00','Vila Redonda');
+
+CREATE TABLE antenas_registro (id INTEGER, pessoa_id INTEGER, torre TEXT, cidade TEXT, ts TEXT);
+INSERT INTO antenas_registro VALUES
+ (1,1,'VR-ERB-03','Vila Redonda','2024-09-19 07:12:00'),
+ (2,1,'VR-ERB-03','Vila Redonda','2024-09-19 12:40:00'),
+ (3,1,'VR-ERB-07','Vila Redonda','2024-09-19 14:22:00'),
+ (4,1,'VR-ERB-03','Vila Redonda','2024-09-19 16:30:00'),
+ (5,2,'VR-ERB-11','Vila Redonda','2024-09-19 09:40:00'),
+ (6,2,'SA-ERB-02','Serra Azul','2024-09-19 11:55:00'),
+ (7,2,'SA-ERB-05','Serra Azul','2024-09-19 14:18:00'),
+ (8,2,'SA-ERB-05','Serra Azul','2024-09-19 14:41:00'),
+ (9,2,'VR-ERB-11','Vila Redonda','2024-09-19 17:20:00'),
+ (10,3,'VR-ERB-03','Vila Redonda','2024-09-19 08:05:00'),
+ (11,3,'VR-ERB-03','Vila Redonda','2024-09-19 12:35:00'),
+ (12,3,'VR-ERB-03','Vila Redonda','2024-09-19 19:00:00'),
+ (13,4,'SA-ERB-09','Serra Azul','2024-09-19 08:15:00'),
+ (14,4,'SA-ERB-09','Serra Azul','2024-09-19 13:10:00'),
+ (15,4,'SA-ERB-09','Serra Azul','2024-09-19 18:05:00'),
+ (16,5,'VR-ERB-07','Vila Redonda','2024-09-19 12:50:00'),
+ (17,5,'VR-ERB-07','Vila Redonda','2024-09-19 21:10:00'),
+ (18,6,'SA-ERB-05','Serra Azul','2024-09-19 05:50:00'),
+ (19,6,'SA-ERB-05','Serra Azul','2024-09-19 14:05:00'),
+ (20,6,'SA-ERB-02','Serra Azul','2024-09-19 15:30:00');
+`,
+  pistas: [
+    { titulo: 'Quem estava batendo ponto',
+      pergunta: 'O assalto foi entre <b>14:10:00 e 14:35:00</b> do dia 19/09/2024. Monte uma <b>CTE</b> chamada <code>crime</code> com essas duas datas e descubra quem tinha turno aberto naquele intervalo. Traga <b>nome, unidade, entrada e saida</b>, em ordem alfabética de nome.',
+      dica: 'Dois intervalos se cruzam quando <code>entrada &lt;= fim</code> <b>e</b> <code>saida &gt;= inicio</code>. Use <code>WITH crime AS (SELECT \'2024-09-19 14:10:00\' AS inicio, \'2024-09-19 14:35:00\' AS fim)</code> e junte com <code>CROSS JOIN crime c</code>.',
+      ordenado: true,
+      solucao: "WITH crime AS (SELECT '2024-09-19 14:10:00' AS inicio, '2024-09-19 14:35:00' AS fim) SELECT p.nome, pe.unidade, pe.entrada, pe.saida FROM ponto_eletronico pe JOIN pessoas p ON p.id = pe.pessoa_id CROSS JOIN crime c WHERE pe.entrada <= c.fim AND pe.saida >= c.inicio ORDER BY p.nome" },
+    { titulo: 'Quem não esteve lá',
+      pergunta: 'Prove a ausência. Traga <b>nome e ocupacao</b> das pessoas que <b>não têm nenhum</b> registro de antena em <code>Serra Azul</code> no dia 19/09/2024, em ordem alfabética.',
+      dica: '<code>WHERE NOT EXISTS (SELECT 1 FROM antenas_registro a WHERE a.pessoa_id = p.id AND a.cidade = \'Serra Azul\' AND a.ts LIKE \'2024-09-19%\')</code>. A subconsulta é correlacionada: ela olha para cada pessoa da consulta de fora.',
+      ordenado: true,
+      solucao: "SELECT p.nome, p.ocupacao FROM pessoas p WHERE NOT EXISTS (SELECT 1 FROM antenas_registro a WHERE a.pessoa_id = p.id AND a.cidade = 'Serra Azul' AND a.ts LIKE '2024-09-19%') ORDER BY p.nome" },
+    { titulo: 'Foi e voltou no mesmo dia',
+      pergunta: 'Use <b>INTERSECT</b>: traga as <b>placas</b> que passaram pelo pedágio no sentido <code>Serra Azul</code> <b>e também</b> no sentido <code>Vila Redonda</code> no dia 19/09/2024.',
+      dica: 'Duas consultas independentes, uma embaixo da outra, ligadas por <code>INTERSECT</code> — ele devolve só o que aparece nas duas. Trocar por <code>EXCEPT</code> daria o contrário: quem foi e não voltou.',
+      solucao: "SELECT placa FROM pedagios WHERE sentido = 'Serra Azul' AND ts LIKE '2024-09-19%' INTERSECT SELECT placa FROM pedagios WHERE sentido = 'Vila Redonda' AND ts LIKE '2024-09-19%'" },
+    { titulo: 'Quem trocou de cidade',
+      pergunta: 'Com <code>LAG()</code>, compare cada registro de antena com o anterior da mesma pessoa e traga apenas os momentos em que a <b>cidade mudou</b>. Colunas: <b>nome, ts, cidade_anterior, cidade</b>, por nome e depois por ts. Considere só o dia 19/09/2024.',
+      dica: 'Numa CTE: <code>LAG(a.cidade) OVER (PARTITION BY a.pessoa_id ORDER BY a.ts) AS cidade_anterior</code>. Fora dela, filtre <code>cidade_anterior IS NOT NULL AND cidade &lt;&gt; cidade_anterior</code> — a primeira linha de cada pessoa não tem anterior.',
+      ordenado: true,
+      solucao: "WITH seq AS (SELECT a.pessoa_id, a.ts, a.cidade, LAG(a.cidade) OVER (PARTITION BY a.pessoa_id ORDER BY a.ts) AS cidade_anterior FROM antenas_registro a WHERE a.ts LIKE '2024-09-19%') SELECT p.nome, s.ts, s.cidade_anterior, s.cidade FROM seq s JOIN pessoas p ON p.id = s.pessoa_id WHERE s.cidade_anterior IS NOT NULL AND s.cidade <> s.cidade_anterior ORDER BY p.nome, s.ts" },
+    { titulo: 'No local, na hora',
+      pergunta: 'Fecho: numa CTE <code>presentes</code>, pegue quem tem registro de antena em <code>Serra Azul</code> entre <b>13:30:00 e 15:30:00</b>. Traga <b>nome, ocupacao, placa, modelo</b> e o primeiro horário de pedágio daquele dia como <code>passou_no_pedagio</code>, em ordem alfabética de nome.',
+      dica: 'O veículo e o pedágio entram por <code>LEFT JOIN</code> (nem todo mundo tem carro no cadastro). Ligue <code>veiculos v ON v.proprietario_id = p.id</code> e <code>pedagios ped ON ped.placa = v.placa AND ped.ts LIKE \'2024-09-19%\'</code>, agrupe pelas colunas de texto e use <code>MIN(ped.ts)</code>.',
+      ordenado: true,
+      solucao: "WITH presentes AS (SELECT DISTINCT pessoa_id FROM antenas_registro WHERE cidade = 'Serra Azul' AND ts BETWEEN '2024-09-19 13:30:00' AND '2024-09-19 15:30:00') SELECT p.nome, p.ocupacao, v.placa, v.modelo, MIN(ped.ts) AS passou_no_pedagio FROM presentes pr JOIN pessoas p ON p.id = pr.pessoa_id LEFT JOIN veiculos v ON v.proprietario_id = p.id LEFT JOIN pedagios ped ON ped.placa = v.placa AND ped.ts LIKE '2024-09-19%' GROUP BY p.nome, p.ocupacao, v.placa, v.modelo ORDER BY p.nome" }
+  ],
+  suspeitos: [
+    { nome: 'Hermes Caetano Lisboa', papel: 'Ex-vigilante, sem vínculo atual', nota: 'Sem ponto eletrônico no dia. Foi e voltou de Serra Azul.' },
+    { nome: 'Gilberto Assunção', papel: 'Vigilante da transportadora', nota: 'Estava em Serra Azul a trabalho; o ponto dele fecha às 14h00.' },
+    { nome: 'Ubaldo Serra', papel: 'Mecânico em Serra Azul', nota: 'Mora e trabalha na cidade; a antena dele não saiu do bairro o dia todo.' },
+    { nome: 'Nadir Pontual', papel: 'Motorista', nota: 'Ficou em Vila Redonda o dia inteiro. O carro dele foi a Serra Azul na véspera.' }
+  ],
+  culpado: 'Hermes Caetano Lisboa',
+  desfecho: 'A condenação de Tarcísio se apoiou num registro de pedágio da moto dele indo a Serra Azul — de <b>14 de setembro</b>, cinco dias antes do assalto. No dia 19 ele bateu ponto às 06h02, saiu às 16h11 e o celular dele se registrou numa torre de Vila Redonda às 14h22, doze minutos depois do crime, a 200 km de distância. Hermes Caetano Lisboa, demitido da mesma transportadora oito meses antes, não tinha ponto para bater: cruzou o pedágio às 11h02 rumo a Serra Azul, ficou colado na torre SA-ERB-05 entre 14h18 e 14h41 e voltou às 16h12. Foi o único a fazer o trajeto de ida e volta no mesmo dia.'
+}
+];
+
+
+/* ============================================================
+   ORDEM DA TRILHA — 5 fáceis, 3 médios, 2 difíceis
+   ============================================================ */
+const ORDEM_TRILHA = [
+  'museu', 'metro', 'antena', 'carga', 'alvara',   // fácil
+  'seguradora', 'ciber', 'licitacao',              // médio
+  'financeiro', 'revisao'                          // difícil
+];
+
+const CASOS = (function () {
+  const todos = CASOS_BASE.concat(CASOS_EXTRA);
+  const ordenados = ORDEM_TRILHA
+    .map(id => todos.find(c => c.id === id))
+    .filter(Boolean);
+  todos.forEach(c => { if (ordenados.indexOf(c) === -1) ordenados.push(c); });
+  ordenados.forEach((c, i) => { c.numero = i + 1; });
+  return ordenados;
+})();
+
+
+/* ============================================================
+   ARTE — retratos falados e ilustrações das provas
+   Tudo desenhado em SVG, nada de arquivo externo.
+   ============================================================ */
+
+/* gerador determinístico: o mesmo nome sempre dá o mesmo rosto */
+function semear(txt) {
+  let s = 2166136261;
+  for (let i = 0; i < txt.length; i++) { s ^= txt.charCodeAt(i); s = Math.imul(s, 16777619); }
+  return function () { s ^= s << 13; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; };
+}
+const n2 = v => Math.round(v * 10) / 10;
+
+/* nomes femininos do elenco que não terminam em "a" */
+const FEM_EXTRA = ['marlene', 'solange', 'neide', 'ivone', 'cleide', 'rosimeire', 'cristiane', 'nadir', 'bruna'];
+function ehFem(nome) {
+  const p = nome.trim().split(/\s+/)[0].toLowerCase();
+  return /a$/.test(p) || FEM_EXTRA.indexOf(p) >= 0;
+}
+
+/* ajustes manuais onde o papel da pessoa importa */
+const TRACOS = {
+  'Heitor Vasques': { acessorio: 'bone', barba: 'bigode' },
+  'Ruy Castanho': { acessorio: 'bone', barba: 'cavanhaque' },
+  'Nestor Quintela': { acessorio: 'gorro' },
+  'Ivo Rabelo': { cabelo: 'careca', barba: 'bigode' },
+  'Marlene Prado': { acessorio: 'oculos', cabelo: 'preso' },
+  'Cida Borba': { acessorio: 'oculos' },
+  'Otávio Bezerra': { cabelo: 'raspado', barba: 'barba' },
+  'Roberto Íris': { acessorio: 'bone' },
+  'Gerson Aquino': { barba: 'barba' },
+  'Anísio Meireles': { acessorio: 'oculos', cabelo: 'curto', barba: 'bigode' },
+  'Domingos Leiria': { cabelo: 'careca', barba: 'barba' },
+  'Dênis Portugal': { acessorio: 'oculos', cabelo: 'ondulado' },
+  'Bruno Lacerda': { acessorio: 'oculos', barba: 'cavanhaque' },
+  'Wanderley Pinho': { cabelo: 'curto', barba: 'bigode' },
+  'Nivaldo Sarmento': { acessorio: 'bone', barba: 'barba' },
+  'Ubirajara Penteado': { acessorio: 'oculos', cabelo: 'entradas' },
+  'Hermes Caetano Lisboa': { cabelo: 'raspado', barba: 'cavanhaque' },
+  'Gilberto Assunção': { acessorio: 'bone' },
+  'Hamilton Braz': { cabelo: 'curto', acessorio: 'oculos' },
+  'Jurandir Bastos Neto': { acessorio: 'oculos', cabelo: 'entradas', barba: 'bigode' },
+  'Tarcísio Boaventura': { cabelo: 'raspado' },
+  'Valdir Camargo': { acessorio: 'bone', barba: 'bigode' },
+  'Antenor Guedes': { cabelo: 'entradas', barba: 'barba' },
+  'Ubaldo Serra': { acessorio: 'bone', barba: 'cavanhaque' },
+  'Nadir Pontual': { cabelo: 'preso' },
+  'Tomás Bicalho': { cabelo: 'ondulado' }
+};
+
+const CABELOS_M = ['curto', 'raspado', 'entradas', 'ondulado', 'careca', 'franja'];
+const CABELOS_F = ['preso', 'curtoF', 'longo', 'onduladoF', 'franjaF'];
+
+/* ---- o retrato ---- */
+function retrato(nome, ajustes) {
+  const r = semear(nome);
+  const o = Object.assign({}, TRACOS[nome] || {}, ajustes || {});
+  const fem = ('fem' in o) ? o.fem : ehFem(nome);
+
+  const rx = n2(25 + r() * 5);
+  const ry = n2(33 + r() * 6);
+  const cy = 66;
+  const queixo = n2(5 + r() * 13);
+  const olhoY = n2(cy - 3 - r() * 3);
+  const ox = n2(rx * 0.44);
+  const ew = n2(4.6 + r() * 1.8);
+  const eh = n2(2 + r() * 1.3);
+  const arq = n2(1 + r() * 3.2);
+  const sobY = n2(olhoY - 6.5 - r() * 3);
+  const sobW = n2(1.1 + r() * 1.5);
+  const nw = n2(4 + r() * 3.2);
+  const narY = n2(cy + ry * 0.2);
+  const bocaY = n2(cy + ry * 0.53);
+  const mw = n2(5.5 + r() * 3);
+  const curva = n2(1.2 + r() * 3);
+  const labio = n2(0.6 + r() * 0.9);
+  const hv = n2(3 + r() * 8);
+  const idade = r();
+  const marca = r();
+
+  const cabelo = o.cabelo || (fem ? CABELOS_F[Math.floor(r() * CABELOS_F.length)] : CABELOS_M[Math.floor(r() * CABELOS_M.length)]);
+  const barba = o.barba || (fem ? 'nenhuma' : ['nenhuma', 'nenhuma', 'bigode', 'cavanhaque', 'barba'][Math.floor(r() * 5)]);
+  const acess = o.acessorio || (r() < 0.22 ? 'oculos' : 'nenhum');
+
+  const hl = n2(cy - ry * 0.52);              // linha do cabelo
+  const G = [];                                // traços de grafite
+  const F = [];                                // manchas preenchidas
+
+  /* rosto */
+  const face =
+    'M' + n2(60 - rx) + ' ' + n2(cy - ry * 0.2) +
+    'C' + n2(60 - rx) + ' ' + n2(cy - ry - 4) + ' ' + n2(60 + rx) + ' ' + n2(cy - ry - 4) + ' ' + n2(60 + rx) + ' ' + n2(cy - ry * 0.2) +
+    'C' + n2(60 + rx) + ' ' + n2(cy + ry * 0.5) + ' ' + n2(60 + queixo) + ' ' + n2(cy + ry) + ' 60 ' + n2(cy + ry) +
+    'C' + n2(60 - queixo) + ' ' + n2(cy + ry) + ' ' + n2(60 - rx) + ' ' + n2(cy + ry * 0.5) + ' ' + n2(60 - rx) + ' ' + n2(cy - ry * 0.2) + 'Z';
+  G.push('<path d="' + face + '" stroke-width="1.7"/>');
+
+  /* orelhas */
+  G.push('<path d="M' + n2(60 - rx + 1) + ' ' + n2(olhoY - 1) + 'q-4.5 0.5 -4 6q0.5 5.5 4.5 6.5" stroke-width="1.2"/>');
+  G.push('<path d="M' + n2(60 + rx - 1) + ' ' + n2(olhoY - 1) + 'q4.5 0.5 4 6q-0.5 5.5 -4.5 6.5" stroke-width="1.2"/>');
+
+  /* olhos */
+  [60 - ox, 60 + ox].forEach(function (x) {
+    G.push('<path d="M' + n2(x - ew) + ' ' + olhoY + 'Q' + x + ' ' + n2(olhoY - eh * 1.7) + ' ' + n2(x + ew) + ' ' + olhoY +
+      'Q' + x + ' ' + n2(olhoY + eh) + ' ' + n2(x - ew) + ' ' + olhoY + 'Z" stroke-width="1.3"/>');
+    F.push('<circle cx="' + x + '" cy="' + n2(olhoY - 0.3) + '" r="' + n2(1.4 + eh * 0.15) + '"/>');
+    if (idade > 0.55) G.push('<path d="M' + n2(x + ew + 1) + ' ' + n2(olhoY + 1) + 'l2.5 2M' + n2(x + ew + 1.5) + ' ' + n2(olhoY - 1) + 'l2.5 -0.5" stroke-width="0.7" opacity=".55"/>');
+  });
+
+  /* sobrancelhas */
+  [[60 - ox, 1], [60 + ox, -1]].forEach(function (p) {
+    const x = p[0], s = p[1];
+    G.push('<path d="M' + n2(x - (ew + 1.6) * s) + ' ' + n2(sobY + arq * 0.5) + 'Q' + x + ' ' + n2(sobY - arq) + ' ' + n2(x + (ew + 1.2) * s) + ' ' + n2(sobY + 0.6) + '" stroke-width="' + sobW + '"/>');
+  });
+
+  /* nariz */
+  G.push('<path d="M' + n2(59.2) + ' ' + n2(olhoY + 2) + 'C' + n2(58.6) + ' ' + n2(narY - 7) + ' ' + n2(60 - nw) + ' ' + n2(narY - 1) + ' ' + n2(60 - nw * 0.3) + ' ' + n2(narY + 1) + '" stroke-width="1.2"/>');
+  G.push('<path d="M' + n2(60 - nw) + ' ' + n2(narY + 0.6) + 'q' + n2(nw) + ' 3 ' + n2(nw * 2) + ' -1" stroke-width="1"/>');
+
+  /* boca */
+  G.push('<path d="M' + n2(60 - mw) + ' ' + bocaY + 'q' + mw + ' ' + curva + ' ' + n2(mw * 2) + ' 0" stroke-width="1.5"/>');
+  G.push('<path d="M' + n2(60 - mw * 0.82) + ' ' + n2(bocaY - 0.6) + 'q' + n2(mw * 0.82) + ' ' + n2(-1.9 * labio) + ' ' + n2(mw * 1.64) + ' 0" stroke-width="1"/>');
+  if (idade > 0.45) G.push('<path d="M' + n2(60 - mw - 2.5) + ' ' + n2(bocaY - 4) + 'q-1 4 0.5 7M' + n2(60 + mw + 2.5) + ' ' + n2(bocaY - 4) + 'q1 4 -0.5 7" stroke-width="0.7" opacity=".5"/>');
+
+  /* queixo */
+  G.push('<path d="M' + n2(60 - queixo * 0.4) + ' ' + n2(cy + ry * 0.78) + 'q' + n2(queixo * 0.4) + ' 2 ' + n2(queixo * 0.8) + ' 0" stroke-width="0.8" opacity=".6"/>');
+
+  /* cabelo */
+  const topo = 'M' + n2(60 - rx - 1) + ' ' + n2(cy - ry * 0.05) +
+    'C' + n2(60 - rx - hv) + ' ' + n2(cy - ry - hv - 5) + ' ' + n2(60 + rx + hv) + ' ' + n2(cy - ry - hv - 5) + ' ' + n2(60 + rx + 1) + ' ' + n2(cy - ry * 0.05);
+  const fechaReto = 'Q60 ' + n2(hl + 3) + ' ' + n2(60 - rx - 1) + ' ' + n2(cy - ry * 0.05) + 'Z';
+  const fechaEntradas = 'Q' + n2(60 + 11) + ' ' + n2(hl - 4) + ' ' + n2(60 + 3) + ' ' + n2(hl + 2) +
+    'Q60 ' + n2(hl - 4) + ' ' + n2(60 - 3) + ' ' + n2(hl + 2) +
+    'Q' + n2(60 - 11) + ' ' + n2(hl - 4) + ' ' + n2(60 - rx - 1) + ' ' + n2(cy - ry * 0.05) + 'Z';
+  const fechaFranja = 'Q' + n2(60 + 8) + ' ' + n2(sobY - 1) + ' 60 ' + n2(hl + 6) +
+    'Q' + n2(60 - 8) + ' ' + n2(sobY - 1) + ' ' + n2(60 - rx - 1) + ' ' + n2(cy - ry * 0.05) + 'Z';
+
+  function cabeloBase(fecho) {
+    F.push('<path d="' + topo + fecho + '" opacity=".2"/>');
+    G.push('<path d="' + topo + fecho + '" stroke-width="1.4"/>');
+    for (let i = 0; i < 4; i++) {
+      const t = -0.6 + i * 0.4;
+      G.push('<path d="M' + n2(60 + t * rx) + ' ' + n2(hl + 1) + 'q' + n2(t * 3) + ' ' + n2(-hv - 3) + ' ' + n2(t * 7) + ' ' + n2(-hv - 6) + '" stroke-width="0.7" opacity=".45"/>');
+    }
+  }
+  function mechasLongas(ate) {
+    ['-1', '1'].forEach(function (s) {
+      const sn = Number(s);
+      F.push('<path d="M' + n2(60 + sn * (rx + 1)) + ' ' + n2(cy - ry * 0.05) +
+        'C' + n2(60 + sn * (rx + hv + 2)) + ' ' + n2(cy + ry * 0.4) + ' ' + n2(60 + sn * (rx + 4)) + ' ' + n2(ate - 6) + ' ' + n2(60 + sn * (rx - 2)) + ' ' + n2(ate) +
+        'C' + n2(60 + sn * (rx - 5)) + ' ' + n2(ate - 10) + ' ' + n2(60 + sn * (rx - 2)) + ' ' + n2(cy) + ' ' + n2(60 + sn * (rx + 1)) + ' ' + n2(cy - ry * 0.05) + 'Z" opacity=".2"/>');
+      G.push('<path d="M' + n2(60 + sn * (rx + 1)) + ' ' + n2(cy - ry * 0.05) +
+        'C' + n2(60 + sn * (rx + hv + 2)) + ' ' + n2(cy + ry * 0.4) + ' ' + n2(60 + sn * (rx + 4)) + ' ' + n2(ate - 6) + ' ' + n2(60 + sn * (rx - 2)) + ' ' + n2(ate) + '" stroke-width="1.2"/>');
+    });
+  }
+
+  if (cabelo === 'careca') {
+    G.push('<path d="M' + n2(60 - rx) + ' ' + n2(cy - ry * 0.1) + 'q1 -8 3 -12M' + n2(60 + rx) + ' ' + n2(cy - ry * 0.1) + 'q-1 -8 -3 -12" stroke-width="1.1" opacity=".7"/>');
+  } else if (cabelo === 'raspado') {
+    F.push('<path d="' + topo + fechaReto + '" opacity=".14"/>');
+    G.push('<path d="' + topo + '" stroke-width="1.2" stroke-dasharray="1 2"/>');
+    G.push('<path d="M' + n2(60 - rx + 2) + ' ' + n2(hl + 2) + 'Q60 ' + n2(hl - 3) + ' ' + n2(60 + rx - 2) + ' ' + n2(hl + 2) + '" stroke-width="1" opacity=".7"/>');
+  } else if (cabelo === 'entradas') {
+    cabeloBase(fechaEntradas);
+  } else if (cabelo === 'franja' || cabelo === 'franjaF') {
+    cabeloBase(fechaFranja);
+    if (cabelo === 'franjaF') mechasLongas(cy + ry * 0.95);
+  } else if (cabelo === 'longo' || cabelo === 'onduladoF') {
+    cabeloBase(fechaReto);
+    mechasLongas(cy + ry * (cabelo === 'longo' ? 1.25 : 0.95));
+  } else if (cabelo === 'preso') {
+    cabeloBase(fechaReto);
+    F.push('<circle cx="' + n2(60 + rx + 2) + '" cy="' + n2(cy - ry * 0.55) + '" r="7" opacity=".22"/>');
+    G.push('<circle cx="' + n2(60 + rx + 2) + '" cy="' + n2(cy - ry * 0.55) + '" r="7" stroke-width="1.3"/>');
+  } else if (cabelo === 'curtoF') {
+    cabeloBase(fechaReto);
+    mechasLongas(cy + ry * 0.5);
+  } else {
+    cabeloBase(fechaReto);  // curto / ondulado
+    if (cabelo === 'ondulado') {
+      for (let i = 0; i < 3; i++) {
+        G.push('<path d="M' + n2(60 - 14 + i * 14) + ' ' + n2(hl - 4) + 'q4 -4 8 0" stroke-width="0.9" opacity=".6"/>');
+      }
+    }
+  }
+
+  /* pelos faciais */
+  if (barba === 'barba') {
+    const b = 'M' + n2(60 - rx + 1) + ' ' + n2(cy + ry * 0.12) +
+      'C' + n2(60 - rx + 2) + ' ' + n2(cy + ry * 0.72) + ' ' + n2(60 - queixo) + ' ' + n2(cy + ry + 2) + ' 60 ' + n2(cy + ry + 2) +
+      'C' + n2(60 + queixo) + ' ' + n2(cy + ry + 2) + ' ' + n2(60 + rx - 2) + ' ' + n2(cy + ry * 0.72) + ' ' + n2(60 + rx - 1) + ' ' + n2(cy + ry * 0.12) +
+      'C' + n2(60 + rx - 7) + ' ' + n2(cy + ry * 0.62) + ' ' + n2(60 - rx + 7) + ' ' + n2(cy + ry * 0.62) + ' ' + n2(60 - rx + 1) + ' ' + n2(cy + ry * 0.12) + 'Z';
+    F.push('<path d="' + b + '" opacity=".22"/>');
+    G.push('<path d="' + b + '" stroke-width="1.1"/>');
+  } else if (barba === 'cavanhaque') {
+    F.push('<path d="M' + n2(60 - mw - 1) + ' ' + n2(bocaY + 5) + 'q' + n2(mw + 1) + ' -3 ' + n2((mw + 1) * 2) + ' 0q-1 9 -' + n2(mw + 1) + ' 9q-' + n2(mw) + ' 0 -' + n2(mw + 1) + ' -9Z" opacity=".24"/>');
+  }
+  if (barba === 'bigode' || barba === 'cavanhaque' || barba === 'barba') {
+    F.push('<path d="M' + n2(60 - mw - 1.5) + ' ' + n2(bocaY - 3.5) + 'q' + n2(mw + 1.5) + ' -3.2 ' + n2((mw + 1.5) * 2) + ' 0q-' + n2(mw + 1.5) + ' 4.2 -' + n2((mw + 1.5) * 2) + ' 0Z" opacity=".3"/>');
+  }
+
+  /* acessórios */
+  if (acess === 'oculos') {
+    [60 - ox, 60 + ox].forEach(function (x) {
+      G.push('<rect x="' + n2(x - ew - 2.4) + '" y="' + n2(olhoY - eh - 3.4) + '" width="' + n2((ew + 2.4) * 2) + '" height="' + n2(eh * 2 + 6.4) + '" rx="2.6" stroke-width="1.4"/>');
+    });
+    G.push('<path d="M' + n2(60 - ox + ew + 2.4) + ' ' + n2(olhoY - 0.5) + 'h' + n2(2 * ox - 2 * ew - 4.8) +
+      'M' + n2(60 - ox - ew - 2.4) + ' ' + n2(olhoY - 1) + 'l-' + n2(rx - ox + ew - 1) + ' -2' +
+      'M' + n2(60 + ox + ew + 2.4) + ' ' + n2(olhoY - 1) + 'l' + n2(rx - ox + ew - 1) + ' -2" stroke-width="1.2"/>');
+  } else if (acess === 'bone') {
+    const bn = 'M' + n2(60 - rx - 2) + ' ' + n2(hl + 3) + 'C' + n2(60 - rx - 2) + ' ' + n2(cy - ry - 12) + ' ' + n2(60 + rx + 2) + ' ' + n2(cy - ry - 12) + ' ' + n2(60 + rx + 2) + ' ' + n2(hl + 3) + 'Z';
+    F.push('<path d="' + bn + '" opacity=".3"/>');
+    G.push('<path d="' + bn + '" stroke-width="1.5"/>');
+    G.push('<path d="M' + n2(60 - rx - 3) + ' ' + n2(hl + 3) + 'q-9 1 -11 5q12 3 ' + n2(rx + 14) + ' 0" stroke-width="1.5"/>');
+    G.push('<path d="M60 ' + n2(hl + 3) + 'v-' + n2(ry * 0.45) + '" stroke-width="0.9" opacity=".6"/>');
+  } else if (acess === 'gorro') {
+    const gr = 'M' + n2(60 - rx - 2) + ' ' + n2(hl + 4) + 'C' + n2(60 - rx - 2) + ' ' + n2(cy - ry - 14) + ' ' + n2(60 + rx + 2) + ' ' + n2(cy - ry - 14) + ' ' + n2(60 + rx + 2) + ' ' + n2(hl + 4) + 'Z';
+    F.push('<path d="' + gr + '" opacity=".28"/>');
+    G.push('<path d="' + gr + '" stroke-width="1.5"/>');
+    G.push('<rect x="' + n2(60 - rx - 3) + '" y="' + n2(hl + 1) + '" width="' + n2((rx + 3) * 2) + '" height="6" rx="2" stroke-width="1.4"/>');
+  }
+
+  /* hachura de sombra */
+  const hach = [];
+  for (let i = 0; i < 5; i++) {
+    const y = cy + 2 + i * 4;
+    hach.push('M' + n2(60 + rx - 11 - i) + ' ' + n2(y) + 'l7 ' + n2(3.5));
+  }
+  G.push('<path d="' + hach.join('') + '" stroke-width="0.7" opacity=".32"/>');
+  G.push('<path d="M' + n2(60 - queixo * 0.7) + ' ' + n2(cy + ry + 3) + 'q' + n2(queixo * 0.7) + ' 3 ' + n2(queixo * 1.4) + ' 0" stroke-width="0.7" opacity=".3"/>');
+
+  /* pescoço e ombros */
+  G.push('<path d="M' + n2(60 - queixo - 3) + ' ' + n2(cy + ry - 2) + 'v8q0 5 -12 8M' + n2(60 + queixo + 3) + ' ' + n2(cy + ry - 2) + 'v8q0 5 12 8" stroke-width="1.3"/>');
+
+  if (marca > 0.82) G.push('<path d="M' + n2(60 - rx + 7) + ' ' + n2(cy + 4) + 'l3 5" stroke-width="1" opacity=".65"/>');
+
+  return '<svg class="retrato" viewBox="13 5 94 120" role="img" aria-label="Retrato falado de ' + nome + '">' +
+    '<rect x="13" y="5" width="94" height="120" fill="var(--papel-arte)"/>' +
+    '<path d="M13 106h94M13 24h94" stroke="rgba(46,43,37,.09)" stroke-width="1" fill="none"/>' +
+    '<g fill="var(--grafite)">' + F.join('') + '</g>' +
+    '<g fill="none" stroke="var(--grafite)" stroke-linecap="round" stroke-linejoin="round">' + G.join('') + '</g>' +
+    '</svg>';
+}
+
+/* ============================================================
+   PROVAS — uma ilustração por caso
+   ============================================================ */
+const A = ' fill="none" stroke="var(--ambar)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"';
+const C = ' fill="none" stroke="var(--ciano)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"';
+const V = ' fill="none" stroke="var(--vermelho)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"';
+
+const PROVAS = {
+  museu: { legenda: 'Pedestal 12 — vitrine violada', svg:
+    '<rect x="72" y="18" width="76" height="66" rx="3"' + C + ' opacity=".5"/>' +
+    '<path d="M78 84h64l6 22H72z"' + A + '/>' +
+    '<path d="M86 106v14h48v-14"' + A + '/>' +
+    '<path d="M96 54c0-11 5-19 14-19s14 8 14 19-6 22-14 22-14-11-14-22z"' + V + ' stroke-dasharray="4 4"/>' +
+    '<path d="M103 50q3-3 6 0M111 50q3-3 6 0M106 63q4 4 8 0"' + V + ' stroke-dasharray="3 3" opacity=".7"/>' +
+    '<path d="M148 18 72 84"' + V + ' opacity=".55"/>' +
+    '<text x="22" y="60" fill="var(--vermelho)" font-family="var(--f-mono)" font-size="11">22:31</text>' +
+    '<text x="22" y="74" fill="var(--giz-tenue)" font-family="var(--f-mono)" font-size="9">crachá</text>' },
+
+  metro: { legenda: 'Catraca da Sé — entrada sem saída', svg:
+    '<rect x="40" y="26" width="26" height="72" rx="4"' + A + '/>' +
+    '<rect x="140" y="26" width="26" height="72" rx="4"' + A + '/>' +
+    '<path d="M66 52h74M66 72h74"' + A + ' opacity=".55"/>' +
+    '<path d="M92 40h36v22H92z"' + C + '/>' +
+    '<path d="M98 48h18M98 54h12"' + C + ' opacity=".7"/>' +
+    '<path d="M103 74v18M96 92h14"' + C + ' opacity=".6"/>' +
+    '<path d="M150 88l14 14M164 88l-14 14"' + V + '/>' +
+    '<text x="176" y="60" fill="var(--vermelho)" font-family="var(--f-mono)" font-size="9">NULL</text>' },
+
+  antena: { legenda: 'ERB-310 — último sinal', svg:
+    '<path d="M104 112 118 24M136 112 122 24M108 92h24M112 70h16"' + A + '/>' +
+    '<path d="M120 24h0"' + A + '/><circle cx="120" cy="22" r="3" fill="var(--ambar)"/>' +
+    '<path d="M132 14a18 18 0 0 1 0 16M142 6a30 30 0 0 1 0 32"' + C + '/>' +
+    '<path d="M108 14a18 18 0 0 0 0 16M98 6a30 30 0 0 0 0 32"' + C + '/>' +
+    '<rect x="26" y="62" width="34" height="54" rx="5"' + C + '/>' +
+    '<path d="M34 72h18M34 80h12"' + C + ' opacity=".6"/>' +
+    '<path d="M60 90q24 14 44 20"' + V + ' stroke-dasharray="4 4"/>' +
+    '<text x="166" y="106" fill="var(--vermelho)" font-family="var(--f-mono)" font-size="10">20:12</text>' },
+
+  carga: { legenda: 'Baú lacrado — 180 caixas a menos', svg:
+    '<path d="M18 92V44h96v48"' + A + '/>' +
+    '<path d="M114 60h26l16 20v12h-42z"' + A + '/>' +
+    '<circle cx="48" cy="98" r="9"' + A + '/><circle cx="128" cy="98" r="9"' + A + '/>' +
+    '<path d="M18 92h21M57 92h62M137 92h20"' + A + ' opacity=".6"/>' +
+    '<rect x="32" y="56" width="20" height="18"' + C + '/><rect x="56" y="56" width="20" height="18"' + C + '/>' +
+    '<rect x="32" y="74" width="20" height="16"' + C + ' opacity=".35" stroke-dasharray="3 3"/>' +
+    '<rect x="56" y="74" width="20" height="16"' + C + ' opacity=".35" stroke-dasharray="3 3"/>' +
+    '<rect x="80" y="56" width="20" height="18"' + C + ' opacity=".35" stroke-dasharray="3 3"/>' +
+    '<text x="166" y="46" fill="var(--vermelho)" font-family="var(--f-mono)" font-size="11">−180</text>' },
+
+  alvara: { legenda: 'Alvará vencido, vistoria inexistente', svg:
+    '<rect x="26" y="16" width="86" height="104" rx="4"' + A + '/>' +
+    '<rect x="50" y="10" width="38" height="12" rx="3"' + A + '/>' +
+    '<path d="M38 44h62M38 56h62M38 68h44"' + C + ' opacity=".55"/>' +
+    '<path d="M38 88h30"' + C + ' opacity=".4"/>' +
+    '<circle cx="86" cy="92" r="20"' + V + ' opacity=".85"/>' +
+    '<text x="86" y="96" fill="var(--vermelho)" font-family="var(--f-display)" font-size="11" text-anchor="middle" letter-spacing="1">VENC.</text>' +
+    '<rect x="134" y="30" width="48" height="76" rx="3"' + A + '/>' +
+    '<path d="M134 30v76"' + A + '/><circle cx="174" cy="70" r="3" fill="var(--ambar)"/>' +
+    '<path d="M144 60h20v20h-20z"' + V + '/><path d="M148 60v-6a6 6 0 0 1 12 0v6"' + V + '/>' },
+
+  seguradora: { legenda: 'Sinistro pago em 9 dias de vigência', svg:
+    '<rect x="24" y="18" width="92" height="100" rx="4"' + A + '/>' +
+    '<path d="M36 40h68M36 52h68M36 64h40"' + C + ' opacity=".55"/>' +
+    '<path d="M36 84h50M36 96h30"' + C + ' opacity=".35"/>' +
+    '<circle cx="92" cy="92" r="21" transform="rotate(-14 92 92)"' + V + '/>' +
+    '<text x="92" y="96" fill="var(--vermelho)" font-family="var(--f-display)" font-size="11" text-anchor="middle" letter-spacing="1" transform="rotate(-14 92 92)">PAGO</text>' +
+    '<path d="M132 100V40l12-10 12 10v60z"' + A + '/>' +
+    '<path d="M132 100l12 12 12-12"' + A + '/>' +
+    '<text x="144" y="70" fill="var(--ambar)" font-family="var(--f-mono)" font-size="12" text-anchor="middle">9d</text>' },
+
+  ciber: { legenda: '7,4 GB às 02h24', svg:
+    '<rect x="24" y="30" width="86" height="24" rx="3"' + A + '/>' +
+    '<rect x="24" y="58" width="86" height="24" rx="3"' + A + '/>' +
+    '<rect x="24" y="86" width="86" height="24" rx="3"' + A + '/>' +
+    '<circle cx="36" cy="42" r="3" fill="var(--ciano)"/><circle cx="36" cy="70" r="3" fill="var(--ciano)"/>' +
+    '<circle cx="36" cy="98" r="3" fill="var(--vermelho)"/>' +
+    '<path d="M50 42h44M50 70h44M50 98h30"' + C + ' opacity=".45"/>' +
+    '<rect x="136" y="64" width="36" height="30" rx="4"' + V + '/>' +
+    '<path d="M142 64V52a12 12 0 0 1 24 0"' + V + ' stroke-dasharray="4 3"/>' +
+    '<path d="M110 78h22"' + V + ' stroke-dasharray="4 4"/>' +
+    '<text x="154" y="36" fill="var(--vermelho)" font-family="var(--f-mono)" font-size="10" text-anchor="middle">02:24</text>' },
+
+  licitacao: { legenda: 'Três envelopes, um dono', svg:
+    '<rect x="16" y="40" width="58" height="42" rx="3"' + A + '/><path d="M16 40l29 22 29-22"' + A + '/>' +
+    '<rect x="78" y="40" width="58" height="42" rx="3"' + A + '/><path d="M78 40l29 22 29-22"' + A + '/>' +
+    '<rect x="140" y="40" width="58" height="42" rx="3"' + A + '/><path d="M140 40l29 22 29-22"' + A + '/>' +
+    '<circle cx="45" cy="100" r="7"' + V + '/><circle cx="107" cy="100" r="7"' + V + '/><circle cx="169" cy="100" r="7"' + V + '/>' +
+    '<path d="M52 100h48M114 100h48"' + V + ' stroke-dasharray="3 3"/>' +
+    '<path d="M107 93V82"' + V + ' stroke-dasharray="3 3"/>' +
+    '<text x="107" y="26" fill="var(--ambar)" font-family="var(--f-mono)" font-size="10" text-anchor="middle">1,005</text>' },
+
+  financeiro: { legenda: 'Nove fatias, nenhuma acima do limite', svg:
+    '<rect x="20" y="52" width="60" height="34" rx="3"' + A + '/>' +
+    '<rect x="28" y="44" width="60" height="34" rx="3"' + A + ' opacity=".7"/>' +
+    '<rect x="36" y="36" width="60" height="34" rx="3"' + A + ' opacity=".45"/>' +
+    '<circle cx="66" cy="53" r="8"' + A + ' opacity=".7"/>' +
+    '<text x="150" y="44" fill="var(--ciano)" font-family="var(--f-mono)" font-size="10" text-anchor="middle">9.800</text>' +
+    '<path d="M118 56a34 34 0 1 1-6 34"' + V + ' stroke-dasharray="5 4"/>' +
+    '<path d="M112 84l-6 8 10 2z" fill="var(--vermelho)"/>' +
+    '<text x="150" y="92" fill="var(--vermelho)" font-family="var(--f-mono)" font-size="10" text-anchor="middle">×9</text>' },
+
+  revisao: { legenda: 'Ponto batido a 200 km do crime', svg:
+    '<rect x="22" y="20" width="60" height="96" rx="4"' + A + '/>' +
+    '<path d="M32 34h40M32 46h40M32 58h26"' + C + ' opacity=".5"/>' +
+    '<path d="M32 78h40M32 90h40"' + C + ' opacity=".3"/>' +
+    '<path d="M36 100l8 8 14-18"' + ' fill="none" stroke="var(--verde)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<circle cx="146" cy="60" r="30"' + A + '/>' +
+    '<path d="M146 40v22l14 8"' + A + '/>' +
+    '<text x="146" y="106" fill="var(--verde)" font-family="var(--f-mono)" font-size="10" text-anchor="middle">14:22</text>' +
+    '<path d="M100 60h14"' + C + ' stroke-dasharray="4 4"/>' }
+};
+
+function provaSvg(id) {
+  const p = PROVAS[id];
+  if (!p) return '';
+  return '<svg class="prova" viewBox="0 0 220 132" role="img" aria-label="' + p.legenda + '">' + p.svg + '</svg>';
+}
+
+
+/* ============================================================
+   VOZ — narração pela síntese de fala do próprio navegador
+   ============================================================ */
+/* as vozes neurais dos sistemas modernos se anunciam por essas palavras;
+   as sintéticas antigas não têm nenhuma delas */
+const SINAIS_NEURAIS = [
+  [/\b(neural|natural)\b/i, 120],
+  [/\b(premium|enhanced|eloquence|siri)\b/i, 70],
+  [/\bgoogle\b/i, 45],
+  [/(thalita|francisca|brenda|leticia|let[íi]cia|luciana|camila|yara|giovanna|ant[óo]nio|fernanda|duarte|raquel|julia|j[úu]lia|helo[íi]sa|f[áa]bio|donato|valerio|val[ée]rio|macerio|mac[ée]rio|humberto|nicolau|elias|manuela|ines|in[êe]s)/i, 30]
+];
+
+const voz = {
+  ligada: true,
+  taxa: 0.95,
+  escolhida: null,
+  disponiveis: [],
+  aoFim: null,
+  suportada: (typeof window !== 'undefined') && 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined',
+
+  nota: function (v) {
+    let n = 0;
+    const alvo = (v.name || '') + ' ' + (v.voiceURI || '');
+    SINAIS_NEURAIS.forEach(par => { if (par[0].test(alvo)) n += par[1]; });
+    if (/pt[-_]BR/i.test(v.lang)) n += 200;
+    else if (/^pt/i.test(v.lang)) n += 120;
+    if (v.localService === false) n += 35;   // as "online" costumam ser as neurais
+    if (/compact|comp[aá]cta|espeak|festival|pico/i.test(alvo)) n -= 80;
+    return n;
+  },
+
+  catalogar: function () {
+    const todas = speechSynthesis.getVoices() || [];
+    this.disponiveis = todas
+      .filter(v => /^pt/i.test(v.lang))
+      .map(v => ({ v: v, n: this.nota(v) }))
+      .sort((a, b) => b.n - a.n)
+      .map(x => x.v);
+    if (!this.disponiveis.length) this.disponiveis = todas.slice(0, 12);
+    let preferida = null;
+    try { preferida = localStorage.getItem('dd-voz-id'); } catch (e) { /* ignora */ }
+    this.escolhida = (preferida && this.disponiveis.find(v => v.voiceURI === preferida)) || this.disponiveis[0] || null;
+    if (typeof preencherSeletorVoz === 'function') preencherSeletorVoz();
+  },
+
+  usar: function (voiceURI) {
+    const v = this.disponiveis.find(x => x.voiceURI === voiceURI);
+    if (!v) return;
+    this.escolhida = v;
+    try { localStorage.setItem('dd-voz-id', voiceURI); } catch (e) { /* ignora */ }
+  },
+
+  definirTaxa: function (t) {
+    this.taxa = t;
+    try { localStorage.setItem('dd-voz-taxa', String(t)); } catch (e) { /* ignora */ }
+  },
+
+  iniciar: function () {
+    if (!this.suportada) return;
+    try {
+      const salvo = localStorage.getItem('dd-voz');
+      if (salvo !== null) this.ligada = salvo === '1';
+      const t = parseFloat(localStorage.getItem('dd-voz-taxa'));
+      if (t >= 0.6 && t <= 1.6) this.taxa = t;
+    } catch (e) { /* sem storage: fica no padrão */ }
+    this.catalogar();
+    speechSynthesis.addEventListener('voiceschanged', () => this.catalogar());
+    // o Chrome corta falas longas; um resume periódico segura
+    setInterval(() => {
+      if (speechSynthesis.speaking && !speechSynthesis.paused) { speechSynthesis.pause(); speechSynthesis.resume(); }
+    }, 9000);
+  },
+
+  limpar: function (html) {
+    const d = document.createElement('div');
+    d.innerHTML = String(html);
+    return (d.textContent || '').replace(/\s+/g, ' ').trim();
+  },
+
+  /* quebra em frases para não estourar o limite de cada fala */
+  picar: function (txt) {
+    const partes = txt.replace(/([.!?:;])\s+/g, '$1').split('');
+    const saida = [];
+    let atual = '';
+    partes.forEach(p => {
+      if ((atual + ' ' + p).trim().length > 190) { if (atual) saida.push(atual.trim()); atual = p; }
+      else atual = (atual + ' ' + p).trim();
+    });
+    if (atual) saida.push(atual.trim());
+    return saida.filter(Boolean);
+  },
+
+  falar: function (texto, aoTerminar) {
+    if (!this.suportada || !this.ligada) { if (aoTerminar) aoTerminar(); return; }
+    this.parar();
+    const limpo = this.limpar(texto);
+    if (!limpo) { if (aoTerminar) aoTerminar(); return; }
+    const pedacos = this.picar(limpo);
+    this.aoFim = aoTerminar || null;
+    let i = 0;
+    const proximo = () => {
+      if (i >= pedacos.length) { const f = this.aoFim; this.aoFim = null; if (f) f(); return; }
+      const u = new SpeechSynthesisUtterance(pedacos[i++]);
+      u.lang = 'pt-BR';
+      u.rate = this.taxa;
+      u.pitch = 0.95;
+      if (this.escolhida) u.voice = this.escolhida;
+      u.onend = proximo;
+      u.onerror = proximo;
+      try { speechSynthesis.speak(u); } catch (e) { proximo(); }
+    };
+    proximo();
+  },
+
+  parar: function () {
+    if (!this.suportada) return;
+    this.aoFim = null;
+    try { speechSynthesis.cancel(); } catch (e) { /* ignora */ }
+  },
+
+  alternar: function () {
+    this.ligada = !this.ligada;
+    if (!this.ligada) this.parar();
+    try { localStorage.setItem('dd-voz', this.ligada ? '1' : '0'); } catch (e) { /* ignora */ }
+    return this.ligada;
+  }
+};
+
+/* ============================================================
+   NARRADOR — toca o MP3 gerado pelo ElevenLabs quando ele existe
+   e cai na síntese do navegador quando não existe
+   ============================================================ */
+const AUDIO_BASE = 'assets/audio/';
+const narrador = {
+  audio: null,
+  semArquivos: false,   // vira true na primeira falha: para de tentar
+
+  tocar: function (chave, texto, aoTerminar) {
+    this.parar();
+    if (!voz.ligada) { if (aoTerminar) aoTerminar(); return; }
+    if (!chave || this.semArquivos || typeof Audio === 'undefined') {
+      voz.falar(texto, aoTerminar); return;
+    }
+    const a = new Audio(AUDIO_BASE + chave + '.mp3');
+    a.preload = 'auto';
+    let caiu = false;
+    const cair = () => {
+      if (caiu) return;
+      caiu = true;
+      this.semArquivos = true;
+      this.audio = null;
+      voz.falar(texto, aoTerminar);
+    };
+    a.addEventListener('error', cair);
+    a.addEventListener('ended', () => { this.audio = null; if (aoTerminar) aoTerminar(); });
+    this.audio = a;
+    const p = a.play();
+    if (p && typeof p.catch === 'function') p.catch(cair);
+  },
+
+  falando: function () {
+    return !!(this.audio && !this.audio.paused) ||
+      (voz.suportada && speechSynthesis.speaking);
+  },
+
+  parar: function () {
+    if (this.audio) { try { this.audio.pause(); } catch (e) { /* ignora */ } this.audio = null; }
+    voz.parar();
+  }
+};
+
+/* ============================================================
+   CENA — abertura animada de cada caso
+   ============================================================ */
+function montarCena(caso, aoComecar) {
+  const fichas = caso.suspeitos.slice(0, 4).map((s, i) =>
+    '<figure class="cena-ficha" style="--i:' + i + '">' +
+      '<span class="alfinete"></span>' +
+      retrato(s.nome) +
+      '<figcaption>' + esc(s.nome.split(' ')[0]) + '</figcaption>' +
+    '</figure>').join('');
+
+  const pinos = [50, 150, 250, 350].slice(0, caso.suspeitos.slice(0, 4).length);
+  const linha = pinos.map(x => 'M200 190L' + x + ' 30').join('');
+
+  $('#tela-cena').innerHTML =
+    '<div class="cena">' +
+      '<div class="cena-quadro">' +
+        '<svg class="cena-linha" viewBox="0 0 400 220" preserveAspectRatio="none" aria-hidden="true">' +
+          '<path d="' + linha + '" pathLength="1" fill="none" stroke="var(--vermelho)" stroke-width="1.5" vector-effect="non-scaling-stroke" opacity=".75"/>' +
+        '</svg>' +
+        '<div class="cena-fichas">' + fichas + '</div>' +
+        '<div class="cena-prova">' + provaSvg(caso.id) +
+          '<figcaption>' + esc((PROVAS[caso.id] || {}).legenda || '') + '</figcaption>' +
+        '</div>' +
+      '</div>' +
+      '<div class="cena-texto">' +
+        '<div class="rotulo">Caso ' + String(caso.numero).padStart(2, '0') + ' · ' +
+          esc((NIVEIS.find(n => n.id === caso.nivel) || {}).nome || '') + '</div>' +
+        '<h2>' + esc(caso.titulo) + '</h2>' +
+        '<p class="local">' + esc(caso.local) + '</p>' +
+        '<p class="cena-briefing">' + caso.briefing + '</p>' +
+      '</div>' +
+      '<div class="acoes cena-acoes">' +
+        '<button class="btn btn-primario" id="btn-cena-ir">Abrir o dossiê</button>' +
+        '<button class="btn btn-fantasma" id="btn-cena-voz">' + (voz.ligada ? 'Silenciar' : 'Ouvir de novo') + '</button>' +
+      '</div>' +
+    '</div>';
+
+  const seguir = () => { narrador.parar(); aoComecar(); };
+  $('#btn-cena-ir').addEventListener('click', seguir);
+  $('#btn-cena-voz').addEventListener('click', () => {
+    const b = $('#btn-cena-voz');
+    if (narrador.falando()) { narrador.parar(); b.textContent = 'Ouvir de novo'; return; }
+    if (!voz.ligada) { voz.ligada = true; try { localStorage.setItem('dd-voz', '1'); } catch (e) { /* ignora */ } atualizarBotaoVoz(); }
+    narrarCaso(caso);
+    b.textContent = 'Silenciar';
+  });
+
+  mostrarTela('cena');
+  narrarCaso(caso);
+}
+
+function narrarCaso(caso) {
+  narrador.tocar(caso.id + '-abertura',
+    caso.titulo + '. ' + caso.local + '. ' + voz.limpar(caso.briefing),
+    () => { const b = $('#btn-cena-voz'); if (b) b.textContent = 'Ouvir de novo'; });
+}
+
+/* ============================================================
+   ANIMAÇÕES DE FEEDBACK
+   ============================================================ */
+function carimbar(texto, tipo) {
+  const alvo = $('#bloco-pista');
+  if (!alvo) return;
+  const c = document.createElement('div');
+  c.className = 'carimbo ' + (tipo || 'ok');
+  c.textContent = texto;
+  c.setAttribute('aria-hidden', 'true');
+  alvo.appendChild(c);
+  setTimeout(() => c.remove(), 1400);
+}
+
+function contarAte(el, de, ate) {
+  if (!el) return;
+  const passo = Math.max(1, Math.round(Math.abs(ate - de) / 18));
+  let v = de;
+  const t = setInterval(() => {
+    v = (ate > de) ? Math.min(ate, v + passo) : Math.max(ate, v - passo);
+    el.textContent = v;
+    if (v === ate) clearInterval(t);
+  }, 28);
+}
+
+/* ============================================================
+   JOGO — estado, telas e interação
+   ============================================================ */
+const CHAVE = 'delegacia-de-dados-v1';
+const MAX_VIDAS = 5;
+const XP_BASE = 20;
+const XP_ACUSACAO = 60;
+const NIVEIS = [
+  { id: 'facil', nome: 'Fácil', desc: 'SELECT, WHERE, ORDER BY, JOIN e como procurar o que não existe.' },
+  { id: 'medio', nome: 'Médio', desc: 'GROUP BY, HAVING, subconsultas, datas e self-join.' },
+  { id: 'dificil', nome: 'Difícil', desc: 'CTEs, funções de janela, NOT EXISTS e operadores de conjunto.' }
+];
+const PATENTES = [
+  [0, 'Estagiário'], [120, 'Escrivão'], [320, 'Detetive'],
+  [600, 'Inspetor'], [950, 'Delegado'], [1400, 'Perito-Chefe']
+];
+
+let SQL = null, db = null;
+let estado = { xp: 0, ofensiva: 0, ultimoDia: null, casos: {} };
+let caso = null, iPista = 0, vidas = MAX_VIDAS, xpCaso = 0;
+let errosPista = 0, dicaUsada = false, tropecos = 0, combo = 0, respondida = false;
+let esperadoCache = null, suspeitoEscolhido = null, abaAtual = 'pista';
+
+/* ---------------- utilidades ---------------- */
+const $ = s => document.querySelector(s);
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const iniciais = n => n.split(/\s+/).slice(0, 2).map(p => p[0]).join('').toUpperCase();
+const hoje = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+
+function carregar() {
+  try {
+    const bruto = localStorage.getItem(CHAVE);
+    if (bruto) { const p = JSON.parse(bruto); if (p && typeof p === 'object') estado = Object.assign(estado, p); }
+  } catch (e) { /* navegação privada, dados bloqueados: segue com estado zerado */ }
+  if (!estado.casos) estado.casos = {};
+}
+function salvar() {
+  try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) { /* sem persistência: o jogo continua na sessão */ }
+}
+function patente(xp) { let n = PATENTES[0][1]; for (const [m, t] of PATENTES) if (xp >= m) n = t; return n; }
+
+function marcarDia() {
+  const h = hoje();
+  if (estado.ultimoDia === h) return;
+  const ontem = new Date(Date.now() - 86400000);
+  const o = ontem.getFullYear() + '-' + String(ontem.getMonth() + 1).padStart(2, '0') + '-' + String(ontem.getDate()).padStart(2, '0');
+  estado.ofensiva = (estado.ultimoDia === o) ? (estado.ofensiva || 0) + 1 : 1;
+  estado.ultimoDia = h;
+}
+
+function atualizarBarra(animarDe) {
+  const el = $('#v-xp');
+  if (typeof animarDe === 'number' && animarDe !== estado.xp) contarAte(el, animarDe, estado.xp);
+  else el.textContent = estado.xp;
+  $('#v-ofensiva').textContent = estado.ofensiva || 0;
+  $('#v-patente').textContent = patente(estado.xp);
+}
+
+function atualizarBotaoVoz() {
+  const b = $('#btn-voz');
+  if (!b) return;
+  b.setAttribute('aria-pressed', String(voz.ligada));
+  $('#v-voz').textContent = voz.ligada ? 'Voz' : 'Mudo';
+  const c = $('#voz-ligada');
+  if (c) c.checked = voz.ligada;
+}
+
+function preencherSeletorVoz() {
+  const sel = document.getElementById('sel-voz');
+  if (!sel) return;
+  const lista = voz.disponiveis;
+  if (!lista.length) {
+    sel.innerHTML = '<option>Nenhuma voz instalada</option>';
+    sel.disabled = true;
+    return;
+  }
+  sel.disabled = false;
+  sel.innerHTML = lista.map(v =>
+    '<option value="' + esc(v.voiceURI) + '"' + (voz.escolhida && v.voiceURI === voz.escolhida.voiceURI ? ' selected' : '') + '>' +
+    esc(v.name) + (v.localService === false ? ' \u00b7 online' : '') + '</option>').join('');
+}
+
+function abrirPainelVoz() {
+  const p = $('#painel-voz');
+  p.hidden = !p.hidden;
+  if (!p.hidden) {
+    preencherSeletorVoz();
+    $('#faixa-taxa').value = voz.taxa;
+    $('#v-taxa').textContent = voz.taxa.toFixed(2) + '\u00d7';
+    $('#voz-ligada').checked = voz.ligada;
+  }
+}
+
+function mostrarTela(nome) {
+  if (nome !== 'cena') narrador.parar();
+  ['trilha', 'cena', 'caso', 'acusacao', 'resultado'].forEach(t => { $('#tela-' + t).hidden = (t !== nome); });
+  window.scrollTo({ top: 0, behavior: 'auto' });
+}
+
+function liberado(c) {
+  const i = CASOS.indexOf(c);
+  if (i === 0) return true;
+  const ant = CASOS[i - 1];
+  return !!(estado.casos[ant.id] && estado.casos[ant.id].concluido);
+}
+
+/* ---------------- trilha ---------------- */
+const SVG_CADEADO = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M8.5 10.5V7.8a3.5 3.5 0 1 1 7 0v2.7" stroke="currentColor" stroke-width="1.8"/></svg>';
+const SVG_CHECK = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 12.6 4 4 8-9" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function renderTrilha() {
+  const alvo = $('#secoes');
+  alvo.innerHTML = NIVEIS.map(nv => {
+    const lista = CASOS.filter(c => c.nivel === nv.id);
+    const nos = lista.map(c => {
+      const salvo = estado.casos[c.id] || {};
+      const lib = liberado(c);
+      const cls = salvo.concluido ? 'concluido' : (lib ? 'liberado' : 'trancado');
+      const miolo = salvo.concluido
+        ? '<span class="no-num" style="color:var(--verde)">' + SVG_CHECK + '</span>'
+        : (lib ? '<span class="no-num">' + String(c.numero).padStart(2, '0') + '</span>'
+               : '<span class="no-num" style="color:var(--giz-tenue)">' + SVG_CADEADO + '</span>');
+      const est = salvo.estrelas || 0;
+      const estrelas = salvo.concluido
+        ? '<div class="estrelas">' + [1, 2, 3].map(i => '<span class="' + (i <= est ? 'on' : '') + '">★</span>').join('') + '</div>'
+        : '';
+      return '<li class="no ' + cls + '">' +
+        '<button class="no-btn" data-caso="' + c.id + '"' + (lib ? '' : ' disabled aria-label="Caso bloqueado"') + '>' + miolo + '</button>' +
+        '<div class="no-titulo">' + esc(c.titulo) + '</div>' +
+        '<div class="no-sub">' + esc(lib ? c.resumo : 'Resolva o caso anterior') + '</div>' + estrelas +
+        '</li>';
+    }).join('');
+    return '<section class="secao" data-nivel="' + nv.id + '">' +
+      '<div class="faixa"><h3>' + nv.nome + '</h3><p>' + esc(nv.desc) + '</p></div>' +
+      '<ol class="trilha">' + nos + '</ol></section>';
+  }).join('');
+  alvo.querySelectorAll('.no-btn[data-caso]').forEach(b => {
+    b.addEventListener('click', () => abrirCaso(b.dataset.caso));
+  });
+}
+
+/* ---------------- abrir caso ---------------- */
+function abrirCaso(id) {
+  caso = CASOS.find(c => c.id === id);
+  if (!caso) return;
+  iPista = 0; vidas = MAX_VIDAS; xpCaso = 0; tropecos = 0; combo = 0;
+  errosPista = 0; dicaUsada = false; respondida = false; esperadoCache = null;
+  suspeitoEscolhido = null; abaAtual = 'pista';
+  if (db) { try { db.close(); } catch (e) { } }
+  db = new SQL.Database();
+  db.run(caso.esquema);
+  renderDossie(); renderTabelas(); renderPista(); aplicarAbas();
+  montarCena(caso, () => mostrarTela('caso'));
+}
+
+function renderDossie() {
+  const prova = PROVAS[caso.id]
+    ? '<figure class="prova-caixa">' + provaSvg(caso.id) +
+      '<figcaption>' + esc(PROVAS[caso.id].legenda) + '</figcaption></figure>'
+    : '';
+  $('#bloco-dossie').innerHTML =
+    '<div class="dossie-cab">' +
+      '<div class="rotulo">Caso ' + String(caso.numero).padStart(2, '0') + ' · ' + esc((NIVEIS.find(n => n.id === caso.nivel) || {}).nome || '') + '</div>' +
+      '<h2>' + esc(caso.titulo) + '</h2>' +
+      '<div class="local">' + esc(caso.local) + '</div>' +
+    '</div>' +
+    '<div class="painel-corpo">' +
+      '<p class="briefing">' + caso.briefing + '</p>' +
+      prova +
+      '<div class="chips">' + caso.conceitos.map(c => '<span class="chip">' + esc(c) + '</span>').join('') + '</div>' +
+      '<div class="sub-titulo">Suspeitos <button class="btn-ouvir" id="btn-ouvir-dossie">Ouvir</button></div>' +
+      caso.suspeitos.map(s =>
+        '<div class="suspeito"><div class="mini">' + retrato(s.nome) + '</div><div>' +
+        '<h4>' + esc(s.nome) + '</h4><div class="papel">' + esc(s.papel) + '</div>' +
+        '<div class="nota">' + esc(s.nota) + '</div></div></div>').join('') +
+    '</div>';
+  const b = $('#btn-ouvir-dossie');
+  if (b) b.addEventListener('click', () => {
+    if (narrador.falando()) { narrador.parar(); b.textContent = 'Ouvir'; return; }
+    if (!voz.ligada) { voz.ligada = true; atualizarBotaoVoz(); }
+    b.textContent = 'Parar';
+    narrador.tocar(caso.id + '-abertura',
+      caso.titulo + '. ' + caso.local + '. ' + voz.limpar(caso.briefing),
+      () => { b.textContent = 'Ouvir'; });
+  });
+}
+
+function tabelasDoBanco() {
+  const r = db.exec("SELECT name FROM sqlite_master WHERE type='table'");
+  return r.length ? r[0].values.map(v => v[0]) : [];
+}
+
+function renderTabelas(ativa) {
+  const nomes = tabelasDoBanco();
+  const atual = ativa && nomes.includes(ativa) ? ativa : nomes[0];
+  const cols = db.exec('PRAGMA table_info("' + atual + '")');
+  const linhas = db.exec('SELECT * FROM "' + atual + '" LIMIT 8');
+  const total = db.exec('SELECT COUNT(*) FROM "' + atual + '"')[0].values[0][0];
+  $('#tabelas-corpo').innerHTML =
+    '<div class="rotulo">Dataset <span style="color:var(--ciano)">' + esc(caso.dataset) + '</span></div>' +
+    '<div class="lista-tabelas" style="margin-top:10px">' +
+      nomes.map(n => '<button class="tab-btn" data-tab="' + esc(n) + '" aria-pressed="' + (n === atual) + '">' + esc(n) + '</button>').join('') +
+    '</div>' +
+    '<div class="colunas">' +
+      (cols.length ? cols[0].values.map(c => '<span class="col-pill">' + esc(c[1]) + '<em>' + esc(c[2] || '') + '</em></span>').join('') : '') +
+    '</div>' +
+    montarTabela(linhas[0], 8) +
+    '<div class="contagem">' + total + ' linha(s) no total · mostrando até 8</div>' +
+    '<div class="dica-inserir"><button class="link" id="btn-inserir">Colocar <code>SELECT * FROM ' + esc(atual) + '</code> no editor</button></div>';
+  $('#tabelas-corpo').querySelectorAll('[data-tab]').forEach(b =>
+    b.addEventListener('click', () => renderTabelas(b.dataset.tab)));
+  const ins = $('#btn-inserir');
+  if (ins) ins.addEventListener('click', () => {
+    const ed = $('#editor');
+    if (!ed) return;
+    ed.value = 'SELECT *\nFROM ' + atual + '\nLIMIT 10';
+    abaAtual = 'pista'; aplicarAbas(); ed.focus();
+  });
+}
+
+function montarTabela(res, limite) {
+  if (!res || !res.values.length) return '<div class="tabela-envolve"><table class="dados"><tbody><tr><td>Nenhuma linha.</td></tr></tbody></table></div>';
+  const linhas = res.values.slice(0, limite || 30);
+  return '<div class="tabela-envolve"><table class="dados"><thead><tr>' +
+    res.columns.map(c => '<th>' + esc(c) + '</th>').join('') + '</tr></thead><tbody>' +
+    linhas.map(l => '<tr>' + l.map(v => v === null
+      ? '<td class="nulo">NULL</td>'
+      : '<td>' + esc(v) + '</td>').join('') + '</tr>').join('') +
+    '</tbody></table></div>';
+}
+
+/* ---------------- pista ---------------- */
+const AJUDA = [
+  ['Crases e dataset', 'Pode escrever <b>`projeto.' + '' + 'dataset.tabela`</b> ou só o nome da tabela — os dois funcionam.'],
+  ['Datas', '<b>DATE_DIFF(a, b, DAY)</b>, <b>TIMESTAMP_DIFF(a, b, MINUTE)</b>, <b>EXTRACT(HOUR FROM ts)</b>, <b>FORMAT_DATE(\'%Y-%m\', d)</b>, <b>DATE_ADD(d, INTERVAL 7 DAY)</b>'],
+  ['Agregação', '<b>COUNTIF(cond)</b>, <b>SAFE_DIVIDE(a, b)</b>, <b>STRING_AGG(x, \', \')</b>, <b>COUNT(DISTINCT x)</b>'],
+  ['Texto', '<b>STARTS_WITH</b>, <b>ENDS_WITH</b>, <b>CONTAINS_SUBSTR</b>, <b>CONCAT</b>, <b>LOWER</b>'],
+  ['Janela', '<b>ROW_NUMBER()</b>, <b>RANK()</b>, <b>LAG()</b>, <b>SUM() OVER (PARTITION BY ... ORDER BY ...)</b> e até <b>QUALIFY</b>'],
+  ['Tipos', '<b>CAST(x AS INT64)</b> e <b>SAFE_CAST</b> são aceitos.']
+];
+
+function renderPista() {
+  const p = caso.pistas[iPista];
+  respondida = false; errosPista = 0; dicaUsada = false; esperadoCache = null;
+  $('#pista-corpo').innerHTML =
+    '<div class="pista-cab"><span class="n">Pista ' + (iPista + 1) + ' de ' + caso.pistas.length + '</span>' +
+      '<h3>' + esc(p.titulo) + '</h3>' +
+      '<button class="btn-ouvir" id="btn-ouvir-pista">Ouvir</button></div>' +
+    '<p class="enunciado">' + p.pergunta + '</p>' +
+    '<div class="editor-caixa">' +
+      '<div class="editor-cab"><span class="rotulo">Consulta</span><span class="atalho">Ctrl + Enter para rodar</span></div>' +
+      '<textarea id="editor" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="SELECT ..."></textarea>' +
+    '</div>' +
+    '<div class="acoes">' +
+      '<button class="btn btn-primario" id="btn-executar">Executar</button>' +
+      '<button class="btn btn-fantasma" id="btn-dica">Dica (−8 XP)</button>' +
+      '<button class="btn btn-fantasma" id="btn-solucao" hidden>Ver a resposta</button>' +
+    '</div>' +
+    '<div id="retorno"></div>' +
+    '<details class="ajuda"><summary>Sintaxe BigQuery aceita</summary><div class="ajuda-corpo">' +
+      AJUDA.map(a => '<div><span class="rotulo" style="color:var(--giz-fraco)">' + a[0] + '</span><br>' + a[1] + '</div>').join('') +
+    '</div></details>';
+
+  $('#btn-executar').addEventListener('click', executar);
+  $('#btn-dica').addEventListener('click', mostrarDica);
+  $('#btn-ouvir-pista').addEventListener('click', () => {
+    const b = $('#btn-ouvir-pista');
+    if (narrador.falando()) { narrador.parar(); b.textContent = 'Ouvir'; return; }
+    if (!voz.ligada) { voz.ligada = true; atualizarBotaoVoz(); }
+    b.textContent = 'Parar';
+    narrador.tocar(caso.id + '-pista-' + (iPista + 1),
+      p.titulo + '. ' + voz.limpar(p.pergunta), () => { b.textContent = 'Ouvir'; });
+  });
+  $('#btn-solucao').addEventListener('click', revelarSolucao);
+  const ed = $('#editor');
+  ed.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); executar(); }
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const i = ed.selectionStart;
+      ed.value = ed.value.slice(0, i) + '  ' + ed.value.slice(ed.selectionEnd);
+      ed.selectionStart = ed.selectionEnd = i + 2;
+    }
+  });
+  renderProgresso();
+  renderVidas();
+}
+
+function renderProgresso() {
+  $('#progresso').innerHTML = caso.pistas.map((_, i) =>
+    '<i class="' + (i < iPista ? 'feito' : (i === iPista ? 'atual' : '')) + '"></i>').join('');
+}
+const SVG_CORACAO = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 17.5S2.5 12.8 2.5 7.9A4.4 4.4 0 0 1 10 5a4.4 4.4 0 0 1 7.5 2.9c0 4.9-7.5 9.6-7.5 9.6Z" fill="#DE4B44"/></svg>';
+function renderVidas(tremer) {
+  const el = $('#vidas');
+  el.innerHTML = Array.from({ length: MAX_VIDAS }, (_, i) =>
+    '<span class="' + (i < vidas ? '' : (tremer && i === vidas ? 'perdido' : 'vazio')) + '">' + SVG_CORACAO + '</span>').join('');
+  el.setAttribute('aria-label', vidas + ' de ' + MAX_VIDAS + ' chances restantes');
+  if (tremer) { el.classList.add('tremendo'); setTimeout(() => el.classList.remove('tremendo'), 450); }
+}
+
+function aviso(tipo, titulo, texto, extra) {
+  const icones = {
+    ok: '<svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="m5 10.5 3.4 3.4L15 6.6" stroke="#3FBF8F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    erro: '<svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M5 5l10 10M15 5 5 15" stroke="#DE4B44" stroke-width="2.2" stroke-linecap="round"/></svg>',
+    neutro: '<svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.6" stroke="#5BC8DE" stroke-width="1.8"/><path d="M10 6.2v4.6M10 13.4v.6" stroke="#5BC8DE" stroke-width="2" stroke-linecap="round"/></svg>',
+    dica: '<svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 2.6a5 5 0 0 0-2.7 9.2V14h5.4v-2.2A5 5 0 0 0 10 2.6ZM8 16.4h4" stroke="#F2B02E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  };
+  return '<div class="aviso ' + tipo + '">' + icones[tipo] + '<div><h4>' + titulo + '</h4><p>' + texto + '</p>' + (extra || '') + '</div></div>';
+}
+
+function traduzErro(msg) {
+  const m = String(msg);
+  let t = m.match(/no such column: (.+)/i);
+  if (t) return 'Não existe a coluna <code>' + esc(t[1]) + '</code>. Confira os nomes na aba Tabelas.';
+  t = m.match(/no such table: (.+)/i);
+  if (t) return 'Não existe a tabela <code>' + esc(t[1]) + '</code>. Confira os nomes na aba Tabelas.';
+  t = m.match(/no such function: (.+)/i);
+  if (t) return 'A função <code>' + esc(t[1]) + '</code> não é reconhecida aqui. Veja a lista de sintaxe aceita abaixo do editor.';
+  t = m.match(/ambiguous column name: (.+)/i);
+  if (t) return 'A coluna <code>' + esc(t[1]) + '</code> existe em mais de uma tabela. Use o apelido, como <code>a.' + esc(String(t[1]).split('.').pop()) + '</code>.';
+  t = m.match(/near "(.+?)": syntax error/i);
+  if (t) return 'Erro de sintaxe perto de <code>' + esc(t[1]) + '</code>. Falta uma vírgula, um parêntese ou uma palavra-chave.';
+  if (/misuse of aggregate|misuse of window/i.test(m)) return 'Função de agregação ou de janela usada em lugar inválido — funções de janela não entram no <code>WHERE</code>; calcule numa CTE e filtre fora.';
+  if (/incomplete input/i.test(m)) return 'A consulta terminou no meio. Provavelmente falta fechar um parêntese ou uma aspa.';
+  return esc(m);
+}
+
+function rodar(sql) {
+  const res = db.exec(paraSQLite(sql, caso.dataset));
+  for (let i = res.length - 1; i >= 0; i--) if (res[i] && res[i].columns) return res[i];
+  return { columns: [], values: [] };
+}
+
+function executar() {
+  if (respondida) return;
+  const ed = $('#editor');
+  const bruto = (ed.value || '').trim().replace(/;\s*$/, '');
+  if (!bruto) { $('#retorno').innerHTML = aviso('neutro', 'Editor vazio', 'Escreva uma consulta e clique em Executar.'); return; }
+
+  let obtido;
+  try { obtido = rodar(bruto); }
+  catch (e) {
+    $('#retorno').innerHTML = aviso('neutro', 'O banco recusou a consulta', traduzErro(e.message) +
+      '<br><span style="color:var(--giz-tenue);font-size:12.5px">Erro de sintaxe não gasta coração. Ajuste e rode de novo.</span>');
+    return;
+  }
+
+  const p = caso.pistas[iPista];
+  if (!esperadoCache) { try { esperadoCache = rodar(p.solucao); } catch (e) { esperadoCache = { columns: [], values: [] }; } }
+  const cmp = compararResultados(obtido, esperadoCache, !!p.ordenado);
+  const tabela = montarTabela(obtido, 30) +
+    '<div class="contagem">' + obtido.values.length + ' linha(s) · ' + obtido.columns.length + ' coluna(s)</div>';
+
+  if (cmp.ok) { acertou(tabela); return; }
+
+  errosPista++; tropecos++; combo = 0;
+  vidas--;
+  renderVidas(true);
+  carimbar('NÃO', 'erro');
+  if (vidas <= 0) { setTimeout(telaFalha, 700); return; }
+  $('#retorno').innerHTML = aviso('erro', 'Não é essa prova',
+    cmp.motivo + '<br><span style="color:var(--giz-tenue);font-size:12.5px">Restam ' + vidas + ' chance(s) neste caso.</span>') + tabela;
+  if (errosPista >= 3) $('#btn-solucao').hidden = false;
+}
+
+function acertou(tabela) {
+  respondida = true;
+  let ganho = Math.max(5, XP_BASE - errosPista * 5 - (dicaUsada ? 8 : 0));
+  let bonus = 0;
+  if (errosPista === 0 && !dicaUsada) { combo++; if (combo % 3 === 0) bonus = 15; }
+  xpCaso += ganho + bonus;
+  marcarDia();
+  const xpAntes = estado.xp;
+  estado.xp += ganho + bonus;
+  salvar(); atualizarBarra(xpAntes);
+  carimbar(bonus ? 'COMBO' : 'CONFERE', 'ok');
+
+  const ultima = iPista === caso.pistas.length - 1;
+  const extra = '<div class="acoes" style="margin-top:12px"><button class="btn btn-verde" id="btn-continuar">' +
+    (ultima ? 'Ir ao indiciamento' : 'Próxima pista') + '</button></div>';
+  const texto = 'Prova registrada. <b>+' + ganho + ' XP</b>' +
+    (bonus ? ' <b style="color:var(--ambar)">+ ' + bonus + ' de combo (' + combo + ' seguidas)</b>' : '') + '.';
+  $('#retorno').innerHTML = aviso('ok', 'Confere', texto, extra) + tabela;
+  $('#btn-continuar').addEventListener('click', () => {
+    if (ultima) { abrirAcusacao(); }
+    else { iPista++; renderPista(); abaAtual = 'pista'; aplicarAbas(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  });
+  $('#btn-executar').disabled = true;
+  $('#btn-dica').disabled = true;
+  $('#btn-solucao').hidden = true;
+  renderProgresso();
+}
+
+function mostrarDica() {
+  if (respondida || dicaUsada) return;
+  dicaUsada = true; tropecos++;
+  $('#btn-dica').disabled = true;
+  $('#retorno').innerHTML = aviso('dica', 'Dica do perito', caso.pistas[iPista].dica);
+}
+
+function revelarSolucao() {
+  if (respondida) return;
+  respondida = true;
+  const p = caso.pistas[iPista];
+  const ultima = iPista === caso.pistas.length - 1;
+  $('#editor').value = p.solucao;
+  $('#btn-executar').disabled = true; $('#btn-dica').disabled = true; $('#btn-solucao').hidden = true;
+  const extra = '<div class="acoes" style="margin-top:12px"><button class="btn btn-fantasma" id="btn-continuar">' +
+    (ultima ? 'Ir ao indiciamento' : 'Seguir sem pontos') + '</button></div>';
+  $('#retorno').innerHTML = aviso('neutro', 'Consulta revelada',
+    'Ela está no editor. Leia com calma antes de seguir — esta pista não rendeu XP.' +
+    '<div class="tabela-envolve" style="margin-top:10px"><table class="dados"><tbody><tr><td style="white-space:pre-wrap">' +
+    esc(p.solucao) + '</td></tr></tbody></table></div>', extra);
+  $('#btn-continuar').addEventListener('click', () => {
+    if (ultima) abrirAcusacao();
+    else { iPista++; renderPista(); abaAtual = 'pista'; aplicarAbas(); }
+  });
+  renderProgresso();
+}
+
+/* ---------------- acusação ---------------- */
+function abrirAcusacao() {
+  suspeitoEscolhido = null;
+  $('#acusacao-titulo').textContent = 'Quem você indicia?';
+  $('#acusacao-aviso').innerHTML = '';
+  $('#btn-indiciar').disabled = true;
+  $('#cartas-suspeitos').innerHTML = caso.suspeitos.map(s =>
+    '<button class="carta" data-nome="' + esc(s.nome) + '" aria-pressed="false">' +
+    '<div class="mini">' + retrato(s.nome) + '</div>' +
+    '<h4>' + esc(s.nome) + '</h4><div class="papel">' + esc(s.papel) + '</div>' +
+    '<div class="nota">' + esc(s.nota) + '</div></button>').join('');
+  $('#cartas-suspeitos').querySelectorAll('.carta').forEach(b => b.addEventListener('click', () => {
+    suspeitoEscolhido = b.dataset.nome;
+    $('#cartas-suspeitos').querySelectorAll('.carta').forEach(o => o.setAttribute('aria-pressed', String(o === b)));
+    $('#btn-indiciar').disabled = false;
+  }));
+  mostrarTela('acusacao');
+}
+
+function indiciar() {
+  if (!suspeitoEscolhido) return;
+  if (suspeitoEscolhido === caso.culpado) {
+    const xpAntes = estado.xp;
+    xpCaso += XP_ACUSACAO; estado.xp += XP_ACUSACAO;
+    marcarDia();
+    concluirCaso(xpAntes);
+    return;
+  }
+  vidas--; tropecos++;
+  xpCaso = Math.max(0, xpCaso - 20); estado.xp = Math.max(0, estado.xp - 20);
+  salvar(); atualizarBarra();
+  if (vidas <= 0) { telaFalha(); return; }
+  $('#acusacao-aviso').innerHTML = aviso('erro', 'Indiciamento errado',
+    'As provas não sustentam essa acusação. <b>−20 XP</b> e um coração a menos — restam ' + vidas + '. Reveja o dossiê e escolha de novo.');
+}
+
+/* ---------------- fim de caso ---------------- */
+function concluirCaso(xpAntes) {
+  const estrelas = tropecos === 0 ? 3 : (tropecos <= 3 ? 2 : 1);
+  const antes = estado.casos[caso.id] || { xp: 0, estrelas: 0 };
+  estado.casos[caso.id] = {
+    concluido: true,
+    estrelas: Math.max(antes.estrelas || 0, estrelas),
+    xp: Math.max(antes.xp || 0, xpCaso)
+  };
+  salvar(); atualizarBarra(xpAntes);
+
+  const prox = CASOS[CASOS.indexOf(caso) + 1];
+  const precisao = Math.round(100 * caso.pistas.length / (caso.pistas.length + tropecos));
+  $('#resultado-corpo').innerHTML =
+    '<div class="rotulo">Caso ' + String(caso.numero).padStart(2, '0') + ' encerrado</div>' +
+    '<h2>' + esc(caso.culpado) + ' foi indiciado</h2>' +
+    '<div class="culpado"><div class="mini">' + retrato(caso.culpado) + '</div>' +
+      '<div class="culpado-selo">Indiciado</div></div>' +
+    '<div class="estrelas" style="justify-content:center">' + [1, 2, 3].map(i => '<span class="' + (i <= estrelas ? 'on' : '') + '">★</span>').join('') + '</div>' +
+    '<div class="desfecho">' + caso.desfecho + '</div>' +
+    '<div class="placar">' +
+      '<div><div class="v">+' + xpCaso + '</div><div class="r">XP no caso</div></div>' +
+      '<div><div class="v">' + precisao + '%</div><div class="r">Precisão</div></div>' +
+      '<div><div class="v">' + vidas + '/' + MAX_VIDAS + '</div><div class="r">Chances</div></div>' +
+    '</div>' +
+    '<div class="acoes" style="justify-content:center">' +
+      (prox ? '<button class="btn btn-primario" id="btn-proximo">Próximo caso</button>' : '') +
+      '<button class="btn btn-fantasma" id="btn-trilha">Voltar à trilha</button>' +
+    '</div>' +
+    (prox ? '' : '<p style="margin-top:22px;color:var(--giz-fraco)">Você fechou os cinco casos. Volte a qualquer um para caçar as três estrelas.</p>');
+  const bp = $('#btn-proximo');
+  if (bp) bp.addEventListener('click', () => abrirCaso(prox.id));
+  $('#btn-trilha').addEventListener('click', voltarTrilha);
+  mostrarTela('resultado');
+  narrador.tocar(caso.id + '-desfecho',
+    'Caso encerrado. ' + caso.culpado + ' foi indiciado. ' + voz.limpar(caso.desfecho));
+}
+
+function telaFalha() {
+  salvar(); atualizarBarra();
+  $('#resultado-corpo').innerHTML =
+    '<div class="selo-grande falha"><svg width="42" height="42" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#DE4B44" stroke-width="2.4" stroke-linecap="round"/></svg></div>' +
+    '<div class="rotulo">Sem chances</div>' +
+    '<h2>Caso arquivado</h2>' +
+    '<p style="color:var(--giz-fraco);margin-top:10px">As provas se perderam e o delegado tirou o caso das suas mãos. O XP que você já ganhou fica — o caso recomeça do zero.</p>' +
+    '<div class="acoes" style="justify-content:center;margin-top:24px">' +
+      '<button class="btn btn-primario" id="btn-refazer">Reabrir o caso</button>' +
+      '<button class="btn btn-fantasma" id="btn-trilha">Voltar à trilha</button>' +
+    '</div>';
+  $('#btn-refazer').addEventListener('click', () => abrirCaso(caso.id));
+  $('#btn-trilha').addEventListener('click', voltarTrilha);
+  mostrarTela('resultado');
+}
+
+function voltarTrilha() { renderTrilha(); mostrarTela('trilha'); }
+
+/* ---------------- abas ---------------- */
+function aplicarAbas() {
+  const largo = window.matchMedia('(min-width: 880px)').matches;
+  const dos = $('#bloco-dossie'), tab = $('#bloco-tabelas'), pis = $('#bloco-pista');
+  const lateral = abaAtual === 'tabelas' ? 'tabelas' : 'dossie';
+  if (largo) {
+    dos.hidden = lateral !== 'dossie'; tab.hidden = lateral !== 'tabelas'; pis.hidden = false;
+    marcarAbas('#abas-desktop', lateral);
+  } else {
+    dos.hidden = abaAtual !== 'dossie'; tab.hidden = abaAtual !== 'tabelas'; pis.hidden = abaAtual !== 'pista';
+    marcarAbas('#abas-mobile', abaAtual);
+  }
+}
+function marcarAbas(sel, ativo) {
+  document.querySelectorAll(sel + ' .aba').forEach(b =>
+    b.setAttribute('aria-selected', String(b.dataset.alvo === ativo)));
+}
+
+/* ---------------- arranque ---------------- */
+function ligarEventos() {
+  document.querySelectorAll('.abas .aba').forEach(b => b.addEventListener('click', () => {
+    abaAtual = b.dataset.alvo; aplicarAbas();
+  }));
+  $('#btn-voltar').addEventListener('click', voltarTrilha);
+  $('#btn-indiciar').addEventListener('click', indiciar);
+  $('#btn-voz').addEventListener('click', e => { e.stopPropagation(); abrirPainelVoz(); });
+  $('#voz-ligada').addEventListener('change', e => {
+    voz.ligada = e.target.checked;
+    if (!voz.ligada) narrador.parar();
+    try { localStorage.setItem('dd-voz', voz.ligada ? '1' : '0'); } catch (err) { /* ignora */ }
+    atualizarBotaoVoz();
+  });
+  $('#sel-voz').addEventListener('change', e => {
+    voz.usar(e.target.value);
+    narrador.semArquivos = true;
+    voz.falar('Delegacia de Dados. Divisão de consultas.');
+  });
+  $('#faixa-taxa').addEventListener('input', e => {
+    voz.definirTaxa(parseFloat(e.target.value));
+    $('#v-taxa').textContent = voz.taxa.toFixed(2) + '\u00d7';
+  });
+  document.addEventListener('click', e => {
+    const p = $('#painel-voz');
+    if (!p.hidden && !p.contains(e.target)) p.hidden = true;
+  });
+  $('#btn-zerar').addEventListener('click', () => {
+    estado = { xp: 0, ofensiva: 0, ultimoDia: null, casos: {} };
+    salvar(); atualizarBarra(); renderTrilha();
+  });
+  window.addEventListener('resize', () => { if (!$('#tela-caso').hidden) aplicarAbas(); });
+}
+
+function falhaMotor() {
+  $('#carregando').innerHTML =
+    '<div><div class="rotulo" style="color:var(--vermelho)">Banco de dados indisponível</div>' +
+    '<p class="sub">Não foi possível carregar o motor SQL. Verifique a conexão e recarregue a página.</p></div>';
+}
+
+/* o motor pode vir de um arquivo local; se não vier, busca no CDN */
+const CDN_MOTOR = 'https://cdn.jsdelivr.net/npm/sql.js@1.14.2/dist/sql-asm.js';
+function carregarMotor() {
+  if (typeof initSqlJs === 'function') return Promise.resolve();
+  return new Promise((ok, erro) => {
+    const s = document.createElement('script');
+    s.src = CDN_MOTOR;
+    s.onload = () => (typeof initSqlJs === 'function') ? ok() : erro(new Error('motor não inicializou'));
+    s.onerror = () => erro(new Error('não foi possível baixar o motor'));
+    document.head.appendChild(s);
+  });
+}
+
+function comecar() {
+  carregar(); voz.iniciar(); atualizarBarra(); ligarEventos(); atualizarBotaoVoz();
+  renderTrilha(); mostrarTela('trilha');
+  carregarMotor()
+    .then(() => initSqlJs())
+    .then(mod => {
+      SQL = mod;
+      $('#carregando').hidden = true;
+      $('#carregando').style.display = 'none';
+    })
+    .catch(falhaMotor);
+}
+
+/* guarda o andamento se a página for republicada enquanto alguém joga */
+try {
+  if (window.claude && window.claude.hot) {
+    window.claude.hot.snapshot(() => ({ estado: estado }));
+    const reiniciar = dados => {
+      if (dados && dados.estado) { estado = Object.assign(estado, dados.estado); salvar(); }
+      comecar();
+    };
+    window.claude.hot.ready ? window.claude.hot.ready(reiniciar) : reiniciar(window.claude.hot.data || {});
+  } else { comecar(); }
+} catch (e) { comecar(); }
+
+</script>
+
+</body>
+</html>

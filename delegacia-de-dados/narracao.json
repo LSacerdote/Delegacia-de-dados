@@ -1,0 +1,422 @@
+[
+ {
+  "arquivo": "museu-abertura",
+  "grupo": "abertura",
+  "caso": "O Roubo da Sala 12",
+  "texto": "O Roubo da Sala 12. Museu de Arte Municipal · 14 de março de 2026. Às 6h da manhã a curadora encontrou o pedestal da Sala 12 vazio. As portas têm leitor de crachá e todo acesso vira uma linha na tabela acessos . O circuito de câmeras da Sala 12 ficou cego entre 22h20 e 22h45 — uma falha elétrica, segundo o registro de manutenção. Quem passou o crachá naquela janela levou a peça."
+ },
+ {
+  "arquivo": "museu-desfecho",
+  "grupo": "desfecho",
+  "caso": "O Roubo da Sala 12",
+  "texto": "Caso encerrado. Ruy Castanho foi indiciado. Ruy Castanho passou o crachá na Sala 12 às 22h31 e saiu às 22h39 — oito minutos exatos dentro da janela em que as câmeras estavam cegas. Ele era o único ali. A Máscara de Jade apareceu três dias depois em um leilão fechado em Lisboa."
+ },
+ {
+  "arquivo": "museu-pista-1",
+  "grupo": "pista",
+  "caso": "O Roubo da Sala 12",
+  "texto": "O que sumiu. Comece pelo óbvio. Traga peça, sala e valor estimado do objeto cujo status é desaparecido ."
+ },
+ {
+  "arquivo": "museu-pista-2",
+  "grupo": "pista",
+  "caso": "O Roubo da Sala 12",
+  "texto": "Quem dorme no museu. Liste nome e cargo de quem trabalha no turno da noite , em ordem alfabética de nome."
+ },
+ {
+  "arquivo": "museu-pista-3",
+  "grupo": "pista",
+  "caso": "O Roubo da Sala 12",
+  "texto": "O mapa das portas. Quais portas registraram algum acesso no dia 14/03/2026 ? Traga a lista sem repetições , em uma coluna só."
+ },
+ {
+  "arquivo": "museu-pista-4",
+  "grupo": "pista",
+  "caso": "O Roubo da Sala 12",
+  "texto": "A janela cega. As câmeras da Sala 12 morreram entre 22:20:00 e 22:45:00 . Traga funcionario_id, tipo e data_hora dos acessos à porta Sala 12 nessa janela, do mais antigo para o mais recente."
+ },
+ {
+  "arquivo": "museu-pista-5",
+  "grupo": "pista",
+  "caso": "O Roubo da Sala 12",
+  "texto": "Colocando nome nos números. Um id não prende ninguém. Junte acessos com funcionarios e traga nome, cargo, data_hora e tipo de todos os acessos à Sala 12 a partir das 20h do dia 14 , do mais antigo para o mais recente."
+ },
+ {
+  "arquivo": "metro-abertura",
+  "grupo": "abertura",
+  "caso": "O Último Trem",
+  "texto": "O Último Trem. Estação Sé · madrugada de 3 de maio de 2026. Bruna Quintanilha passou o cartão na catraca da Estação Sé às 23h40 do dia 2 de maio. A bolsa dela foi encontrada na via às 00h05. Cada viagem registra entrada e saída; quando falta a saída, a pessoa ainda estava lá dentro quando o sistema fechou. Há também um registro separado para as portas de serviço , usadas por manutenção — e por quem sabe onde elas ficam."
+ },
+ {
+  "arquivo": "metro-desfecho",
+  "grupo": "desfecho",
+  "caso": "O Último Trem",
+  "texto": "Caso encerrado. Otávio Bezerra foi indiciado. Otávio Bezerra entrou duas vezes na Sé naquela noite — a segunda às 23h47, sem nunca registrar saída pela catraca. Às 00h03 o cartão dele abriu uma porta de serviço no fim da plataforma, cinco minutos depois dos gritos e dois minutos antes da bolsa ser encontrada na via. Ele conhecia a estação: trabalhou na manutenção da linha Azul por seis anos."
+ },
+ {
+  "arquivo": "metro-pista-1",
+  "grupo": "pista",
+  "caso": "O Último Trem",
+  "texto": "O que a estação registrou. Traga data_hora e descricao das ocorrências da estação Sé com gravidade alta , da mais antiga para a mais recente."
+ },
+ {
+  "arquivo": "metro-pista-2",
+  "grupo": "pista",
+  "caso": "O Último Trem",
+  "texto": "Quem entrou e não saiu. Traga cartao, estacao_entrada e hora_entrada das viagens que não têm hora de saída , da mais antiga para a mais recente."
+ },
+ {
+  "arquivo": "metro-pista-3",
+  "grupo": "pista",
+  "caso": "O Último Trem",
+  "texto": "De fora da cidade. A perícia quer os passageiros que moram fora da capital. Traga nome e cartao de quem mora em Osasco , Guarulhos ou Diadema , em ordem alfabética."
+ },
+ {
+  "arquivo": "metro-pista-4",
+  "grupo": "pista",
+  "caso": "O Último Trem",
+  "texto": "Cartão tem dono. Junte viagens com passageiros pelo cartao e traga nome, estacao_entrada e hora_entrada de quem não registrou saída, da mais antiga para a mais recente."
+ },
+ {
+  "arquivo": "metro-pista-5",
+  "grupo": "pista",
+  "caso": "O Último Trem",
+  "texto": "A porta de serviço. A bolsa apareceu às 00h05. Descubra quem usou uma porta de serviço da Sé entre 23:50:00 do dia 2 e 00:30:00 do dia 3 . Traga nome e data_hora ."
+ },
+ {
+  "arquivo": "antena-abertura",
+  "grupo": "abertura",
+  "caso": "Sinal de Antena",
+  "texto": "Sinal de Antena. Belo Horizonte · 11 de agosto de 2026. Neusa Dantas, corretora, saiu às 18h para uma visita marcada no Buritis e não voltou. O aparelho dela continuou se registrando em antenas por mais de uma hora — e o último registro é num bairro onde ela não tinha nada a fazer. Cada vez que um celular fala com a rede, fica uma linha em registros : linha, antena e horário. O trajeto de uma pessoa vira uma consulta ordenada por tempo."
+ },
+ {
+  "arquivo": "antena-desfecho",
+  "grupo": "desfecho",
+  "caso": "Sinal de Antena",
+  "texto": "Caso encerrado. Wanderley Pinho foi indiciado. O celular de Neusa saltou do Buritis para Contagem às 20h12. O de Wanderley Pinho fez exatamente o mesmo salto dois minutos antes, às 20h10 — e foi o único além dela naquela antena. Ele havia ligado às 18h22 para confirmar a visita e, às 20h44, ligou para o porteiro pedindo que \"não registrasse ninguém depois das sete\". O apartamento estava em nome dele e em processo de penhora."
+ },
+ {
+  "arquivo": "antena-pista-1",
+  "grupo": "pista",
+  "caso": "Sinal de Antena",
+  "texto": "De quem é a linha. A irmã passou o número dela: (31) 99814-2207 . Traga titular, numero e operadora dessa linha."
+ },
+ {
+  "arquivo": "antena-pista-2",
+  "grupo": "pista",
+  "caso": "Sinal de Antena",
+  "texto": "Os últimos sinais. A linha dela é a de id = 1 . Traga os três registros mais recentes dessa linha, com ts, antena_id e tipo , do mais novo para o mais antigo."
+ },
+ {
+  "arquivo": "antena-pista-3",
+  "grupo": "pista",
+  "caso": "Sinal de Antena",
+  "texto": "O trajeto com nome de bairro. Um número de antena não diz nada. Junte registros com antenas e traga ts, codigo e bairro de todo o trajeto da linha 1, do mais antigo para o mais recente."
+ },
+ {
+  "arquivo": "antena-pista-4",
+  "grupo": "pista",
+  "caso": "Sinal de Antena",
+  "texto": "Quem mais estava lá. O último sinal dela veio da antena BH-ERB-310 , em Contagem. Descubra quais titulares passaram por essa antena entre 20:00 e 23:00 daquele dia. Traga titular e numero , sem repetir, em ordem alfabética."
+ },
+ {
+  "arquivo": "antena-pista-5",
+  "grupo": "pista",
+  "caso": "Sinal de Antena",
+  "texto": "Quem ligou para ela. Traga todas as chamadas em que o número dela aparece — como origem ou como destino . Colunas: ts, origem, destino, duracao_seg , da mais antiga para a mais recente."
+ },
+ {
+  "arquivo": "carga-abertura",
+  "grupo": "abertura",
+  "caso": "A Carga Fantasma",
+  "texto": "A Carga Fantasma. BR-364 · junho de 2026. Três viagens da mesma transportadora chegaram com menos caixas do que saíram — e nenhuma delas registrou ocorrência de roubo. A carga não sumiu na estrada: sumiu parada. Cada viagem guarda quantas caixas saíram e quantas chegaram, e cada parada no caminho vira uma linha em paradas , com quanto tempo o caminhão ficou ali."
+ },
+ {
+  "arquivo": "carga-desfecho",
+  "grupo": "desfecho",
+  "caso": "A Carga Fantasma",
+  "texto": "Caso encerrado. Nivaldo Sarmento foi indiciado. Os motoristas mudaram, as placas mudaram, os destinos mudaram. O que não mudou foi o Pátio Redentor: as três viagens que perderam carga pararam ali de madrugada, por 195, 215 e 240 minutos. A viagem de Valdir que chegou completa parou no Pátio Central, do outro lado da mesma cidade. Nivaldo Sarmento controlava o portão, o registro de entrada e a única câmera — que, nas três noites, estava \"em manutenção\"."
+ },
+ {
+  "arquivo": "carga-pista-1",
+  "grupo": "pista",
+  "caso": "A Carga Fantasma",
+  "texto": "Onde a conta não fecha. Traga id, placa, caixas_saida e caixas_chegada das viagens em que chegou menos do que saiu , ordenado por id."
+ },
+ {
+  "arquivo": "carga-pista-2",
+  "grupo": "pista",
+  "caso": "A Carga Fantasma",
+  "texto": "Quantas sumiram. Crie uma coluna com a diferença. Traga id, placa e caixas_saida - caixas_chegada apelidada de faltando , só das viagens com falta, da maior perda para a menor."
+ },
+ {
+  "arquivo": "carga-pista-3",
+  "grupo": "pista",
+  "caso": "A Carga Fantasma",
+  "texto": "Quem estava na direção. Junte com motoristas e traga nome, base, o id da viagem e a coluna faltando , só das viagens com falta, da maior perda para a menor."
+ },
+ {
+  "arquivo": "carga-pista-4",
+  "grupo": "pista",
+  "caso": "A Carga Fantasma",
+  "texto": "Paradas longas demais. Um caminhão carregado não fica parado à toa. Traga local, cidade e duracao_min das paradas de 150 minutos ou mais , da mais longa para a mais curta."
+ },
+ {
+  "arquivo": "carga-pista-5",
+  "grupo": "pista",
+  "caso": "A Carga Fantasma",
+  "texto": "Um pátio, três viagens. Cruze as três tabelas: paradas , viagens e patios . Traga o nome do pátio como patio , o responsavel, o id da viagem e a coluna faltando , apenas das paradas de 150 minutos ou mais em viagens que perderam carga. Ordene pelo id da viagem."
+ },
+ {
+  "arquivo": "alvara-abertura",
+  "grupo": "abertura",
+  "caso": "O Alvará da Meia-Noite",
+  "texto": "O Alvará da Meia-Noite. Vila Redonda · 18 de abril de 2026. Um incêndio tomou a Casa Andorinha durante um baile lotado. Ninguém ateou fogo: a investigação é sobre o que deveria ter impedido aquilo e não impediu — o alvará, a vistoria, a lotação. Aqui você vai aprender a procurar o que não existe no banco: a vistoria que nunca aconteceu não deixa linha nenhuma, e achar essa ausência é uma técnica própria. Caso ficcional; nomes, empresas e endereços são inventados."
+ },
+ {
+  "arquivo": "alvara-desfecho",
+  "grupo": "desfecho",
+  "caso": "O Alvará da Meia-Noite",
+  "texto": "Caso encerrado. Ubirajara Penteado foi indiciado. A Casa Andorinha operava com alvará de funcionamento vencido desde 10 de março, com 730 pessoas num salão autorizado para 480 e com duas das três saídas de emergência trancadas ou obstruídas. Nada disso foi o começo: a casa nunca recebeu uma única vistoria do Corpo de Bombeiros, em nenhum ano. Ubirajara Penteado assinou o alvará de funcionamento dois dias depois de uma vistoria de Posturas feita por ele mesmo, sem o laudo dos bombeiros que a própria lei municipal exigia — e repetiu o padrão na Boate Meia-Lua, aprovada \"com ressalvas\" que nunca foram cobradas."
+ },
+ {
+  "arquivo": "alvara-pista-1",
+  "grupo": "pista",
+  "caso": "O Alvará da Meia-Noite",
+  "texto": "As casas de show da cidade. Comece pelo cadastro. Traga nome, bairro e capacidade_alvara dos estabelecimentos do tipo casa de shows , da maior capacidade para a menor."
+ },
+ {
+  "arquivo": "alvara-pista-2",
+  "grupo": "pista",
+  "caso": "O Alvará da Meia-Noite",
+  "texto": "Papel vencido. O incêndio foi em 18/04/2026 . Traga o nome do estabelecimento, o tipo do alvará e a validade de todo alvará que já estava vencido nessa data, do mais antigo para o mais recente."
+ },
+ {
+  "arquivo": "alvara-pista-3",
+  "grupo": "pista",
+  "caso": "O Alvará da Meia-Noite",
+  "texto": "Gente demais lá dentro. Compare os ingressos vendidos com a capacidade autorizada. Traga o nome do estabelecimento, nome_evento, data, ingressos_vendidos e capacidade_alvara dos eventos em que se vendeu mais do que cabia , por data."
+ },
+ {
+  "arquivo": "alvara-pista-4",
+  "grupo": "pista",
+  "caso": "O Alvará da Meia-Noite",
+  "texto": "Quem assinou. Todo alvará tem um fiscal responsável. Junte alvaras , estabelecimentos e fiscais e traga o nome do estabelecimento, o nome do fiscal como fiscal , emissao e validade dos alvarás do tipo funcionamento , em ordem alfabética de estabelecimento."
+ },
+ {
+  "arquivo": "alvara-pista-5",
+  "grupo": "pista",
+  "caso": "O Alvará da Meia-Noite",
+  "texto": "A vistoria que nunca houve. Agora a técnica nova: encontre os estabelecimentos que nunca receberam vistoria do Corpo de Bombeiros . Traga nome, tipo e capacidade_alvara , em ordem alfabética."
+ },
+ {
+  "arquivo": "seguradora-abertura",
+  "grupo": "abertura",
+  "caso": "A Apólice Fantasma",
+  "texto": "A Apólice Fantasma. Meridiano Seguros · auditoria do 1º trimestre. A área de subscrição acendeu um alerta: a sinistralidade da carteira de Auto estourou o orçamento em três meses. O padrão de fraude clássico é simples de descrever e difícil de ver no meio de milhares de linhas — apólice nova, sinistro grande logo no início da vigência, sempre pelo mesmo corretor . Aqui você vai precisar de agregação: contar, somar e filtrar grupos."
+ },
+ {
+  "arquivo": "seguradora-desfecho",
+  "grupo": "desfecho",
+  "caso": "A Apólice Fantasma",
+  "texto": "Caso encerrado. Anísio Meireles foi indiciado. Todas as cinco apólices de Anísio Meireles são de clientes de Campinas, e todas as cinco geraram sinistro aprovado em menos de 16 dias de vigência. R$ 172.200 pagos sobre R$ 11.800 de prêmio — uma sinistralidade de 14,59, quase três vezes a do segundo colocado. Os quatro clientes tinham cadastro aberto na mesma semana, pelo mesmo endereço de e-mail."
+ },
+ {
+  "arquivo": "seguradora-pista-1",
+  "grupo": "pista",
+  "caso": "A Apólice Fantasma",
+  "texto": "Onde o dinheiro sai. Para cada tipo de sinistro aprovado , traga tipo , a quantidade como qtd e a soma de valor_pago como total . Ordene do maior total para o menor."
+ },
+ {
+  "arquivo": "seguradora-pista-2",
+  "grupo": "pista",
+  "caso": "A Apólice Fantasma",
+  "texto": "Corretores com volume. Traga o nome do corretor e quantas apólices ele emitiu como apolices , mantendo só quem tem 3 ou mais . Ordene do maior para o menor."
+ },
+ {
+  "arquivo": "seguradora-pista-3",
+  "grupo": "pista",
+  "caso": "A Apólice Fantasma",
+  "texto": "Sinistro cedo demais. Um sinistro logo depois da assinatura é o sinal clássico. Traga id do sinistro, produto da apólice e a diferença em dias (coluna dias ) entre data_ocorrencia e inicio_vigencia , mantendo apenas os casos com 30 dias ou menos ."
+ },
+ {
+  "arquivo": "seguradora-pista-4",
+  "grupo": "pista",
+  "caso": "A Apólice Fantasma",
+  "texto": "Sinistralidade por corretor. Compare o que entra com o que sai. Para cada corretor traga nome , SUM(premio) AS premio , a soma dos sinistros aprovados como pago (use 0 quando não houver) e a razão pago / premio arredondada em 2 casas como sinistralidade . Ordene pela sinistralidade, do maior para o menor."
+ },
+ {
+  "arquivo": "seguradora-pista-5",
+  "grupo": "pista",
+  "caso": "A Apólice Fantasma",
+  "texto": "Uma cidade só. Fraude organizada se concentra. Junte apolices , clientes e corretores e traga o nome do corretor como corretor , a cidade do cliente e a contagem como qtd , mantendo só as combinações com 2 ou mais apólices. Ordene da maior quantidade para a menor."
+ },
+ {
+  "arquivo": "ciber-abertura",
+  "grupo": "abertura",
+  "caso": "Rastro Digital",
+  "texto": "Rastro Digital. Meridiano Seguros · vazamento de 9 de julho de 2026. Alguém baixou 7,4 GB da base de clientes e colocou à venda na madrugada. Você tem os logins (com IP, dispositivo e se deu certo), a tabela de IPs (país e se é VPN), os arquivos com dono e classificação, e os downloads . O administrador de TI é o suspeito óbvio — mas o log não liga para o que é óbvio."
+ },
+ {
+  "arquivo": "ciber-desfecho",
+  "grupo": "desfecho",
+  "caso": "Rastro Digital",
+  "texto": "Caso encerrado. Dênis Portugal foi indiciado. A conta de Dênis Portugal entrou de um IP romeno às 02h11, na terceira tentativa, quatro minutos depois da primeira. Nos vinte minutos seguintes baixou três arquivos que não eram dele — contrato de resseguro, folha de pagamento e os 7,4 GB da base de clientes. Bruno e Cássia sofreram tentativas de invasão na mesma madrugada e nenhuma passou: eram ruído para embaralhar o log."
+ },
+ {
+  "arquivo": "ciber-pista-1",
+  "grupo": "pista",
+  "caso": "Rastro Digital",
+  "texto": "Quem trabalha de madrugada. Traga id, usuario_id e ts dos downloads feitos antes das 6 da manhã , do mais antigo para o mais recente. Extraia a hora do campo ts ."
+ },
+ {
+  "arquivo": "ciber-pista-2",
+  "grupo": "pista",
+  "caso": "Rastro Digital",
+  "texto": "Endereços que não deveriam existir. Junte logins , usuarios e ips . Traga nome, ip, pais, ts e sucesso de todo login vindo de um IP marcado como VPN ( vpn = 1 ), do mais antigo para o mais recente."
+ },
+ {
+  "arquivo": "ciber-pista-3",
+  "grupo": "pista",
+  "caso": "Rastro Digital",
+  "texto": "Quem move volume. Usando uma subconsulta , traga nome e setor dos usuários que fizeram algum download acima de 500.000 bytes , em ordem alfabética de nome."
+ },
+ {
+  "arquivo": "ciber-pista-4",
+  "grupo": "pista",
+  "caso": "Rastro Digital",
+  "texto": "Quanto tempo levou a invasão. Para cada usuário com login vindo de VPN, traga nome , a primeira tentativa como primeira , a última como ultima e a diferença em minutos como minutos ."
+ },
+ {
+  "arquivo": "ciber-pista-5",
+  "grupo": "pista",
+  "caso": "Rastro Digital",
+  "texto": "O arquivo que não era dele. Feche o cerco: downloads feitos entre 0h e 5h de arquivos cujo dono_id é diferente de quem baixou. Traga nome do usuário, nome do arquivo como arquivo , classificacao, ts e os megabytes arredondados em 2 casas como mb (bytes dividido por 1000000.0). Do mais antigo para o mais recente."
+ },
+ {
+  "arquivo": "licitacao-abertura",
+  "grupo": "abertura",
+  "caso": "A Licitação de Fachada",
+  "texto": "A Licitação de Fachada. Prefeitura de Vila Redonda · auditoria 2026. A Secretaria de Educação comprou kits escolares duas vezes em um ano, sempre com três propostas quase idênticas, sempre vencidas por empresas abertas semanas antes do edital. O truque tem nome: propostas de cobertura — duas empresas participam só para dar aparência de disputa. O que entrega o esquema é o quadro societário : para achar sócios em comum entre empresas diferentes, você junta a tabela de sócios com ela mesma ."
+ },
+ {
+  "arquivo": "licitacao-desfecho",
+  "grupo": "desfecho",
+  "caso": "A Licitação de Fachada",
+  "texto": "Caso encerrado. Jurandir Bastos Neto foi indiciado. Aurora, Boreal e Cristalina foram abertas em três semanas consecutivas de fevereiro de 2025, na mesma cidade, com capital somado de R$ 53 mil. Nas duas licitações de kits escolares as três disputaram entre si e mais ninguém, com dispersão de 1,005 — menos de meio por cento entre a menor e a maior proposta. Jurandir Bastos Neto é sócio majoritário das duas que venceram e recebeu R$ 2.312.500, quarenta e oito e setenta e duas vezes o capital declarado de cada empresa. Marilda e Edgar, sócios da terceira, são irmã e filho dele."
+ },
+ {
+  "arquivo": "licitacao-pista-1",
+  "grupo": "pista",
+  "caso": "A Licitação de Fachada",
+  "texto": "Quem aparece sempre. Conte a participação de cada empresa nas licitações. Traga razao_social, cidade , a quantidade de propostas como propostas e a menor proposta apresentada como menor_proposta , da mais participativa para a menos."
+ },
+ {
+  "arquivo": "licitacao-pista-2",
+  "grupo": "pista",
+  "caso": "A Licitação de Fachada",
+  "texto": "Contrato maior que a empresa. Compare o que a empresa recebeu com o capital que ela declarou ter. Traga razao_social, abertura, capital_social, valor_pago e a razão valor_pago / capital_social arredondada em 1 casa como vezes_o_capital , do maior para o menor."
+ },
+ {
+  "arquivo": "licitacao-pista-3",
+  "grupo": "pista",
+  "caso": "A Licitação de Fachada",
+  "texto": "Sócio de duas casas. Junte a tabela socios com ela mesma para achar quem é sócio de mais de uma empresa. Traga o nome do sócio, o cpf e as duas razões sociais como empresa_a e empresa_b , em ordem alfabética de nome."
+ },
+ {
+  "arquivo": "licitacao-pista-4",
+  "grupo": "pista",
+  "caso": "A Licitação de Fachada",
+  "texto": "Disputa de mentira. Numa disputa real as propostas ficam longe umas das outras. Para cada licitação com 3 ou mais concorrentes, traga numero, objeto , a contagem de empresas como concorrentes , MIN(valor) AS menor , MAX(valor) AS maior e a razão maior / menor arredondada em 3 casas como dispersao . Ordene pela dispersão, da menor para a maior."
+ },
+ {
+  "arquivo": "licitacao-pista-5",
+  "grupo": "pista",
+  "caso": "A Licitação de Fachada",
+  "texto": "O dinheiro que saiu. Feche a conta: quanto foi pago às empresas que têm sócio em comum com outra empresa. Traga razao_social, o numero da licitação, valor_pago e a razão valor_pago / valor_estimado arredondada em 2 casas como sobre_estimado , do maior valor pago para o menor."
+ },
+ {
+  "arquivo": "financeiro-abertura",
+  "grupo": "abertura",
+  "caso": "Operação Correnteza",
+  "texto": "Operação Correnteza. COAF · fevereiro de 2026. Transferências acima de R$ 10.000 disparam comunicação automática. Então o dinheiro é picado em fatias menores, enviadas em rajada, e devolvido depois por um caminho indireto — estruturação , ou smurfing . Para enxergar isso você precisa olhar cada linha no contexto da anterior : é o território das funções de janela e das CTEs. Este é o último caso, e ele não dá dica de graça."
+ },
+ {
+  "arquivo": "financeiro-desfecho",
+  "grupo": "desfecho",
+  "caso": "Operação Correnteza",
+  "texto": "Caso encerrado. Hamilton Braz foi indiciado. Hamilton Braz abriu a conta em outubro de 2025 e em três dias enviou R$ 87.600 em nove parcelas — todas entre R$ 9.500 e R$ 9.900, nenhuma acima do limite de comunicação, com treze minutos de intervalo médio. O dinheiro passou pela Ilha Nova, parou na Estrela Serviços e voltou para ele como um único TED de R$ 55.500 com nota de \"consultoria\". As duas empresas foram abertas semanas antes da conta dele, no mesmo endereço."
+ },
+ {
+  "arquivo": "financeiro-pista-1",
+  "grupo": "pista",
+  "caso": "Operação Correnteza",
+  "texto": "O ranking do dinheiro. Monte uma CTE chamada envio que some valor e conte as transações por conta_origem . Depois junte com contas e traga titular, total, qtd e a posição no ranking como posicao , do maior total para o menor."
+ },
+ {
+  "arquivo": "financeiro-pista-2",
+  "grupo": "pista",
+  "caso": "Operação Correnteza",
+  "texto": "A rajada. Use LAG() para calcular, dentro de cada conta_origem , quantos minutos separam cada transação da anterior. Traga conta_origem, ts, valor e minutos apenas das transações com 20 minutos ou menos desde a anterior, ordenado por conta e depois por ts."
+ },
+ {
+  "arquivo": "financeiro-pista-3",
+  "grupo": "pista",
+  "caso": "Operação Correnteza",
+  "texto": "Somando a fatia. Nenhuma fatia da conta 8 passa de dez mil. Mostre o acumulado: traga ts, valor e a soma corrente como acumulado para as transações em que conta_origem = 8 , em ordem de ts ."
+ },
+ {
+  "arquivo": "financeiro-pista-4",
+  "grupo": "pista",
+  "caso": "Operação Correnteza",
+  "texto": "O caminho de volta. Dinheiro lavado volta para casa. Com três cópias de transacoes , encontre os ciclos A → B → C → A em que cada passo é posterior ao anterior. Traga a, b, c (as contas de origem de cada passo), a contagem de caminhos como caminhos e a soma do primeiro passo como entrou . Ordene por caminhos , do maior para o menor."
+ },
+ {
+  "arquivo": "financeiro-pista-5",
+  "grupo": "pista",
+  "caso": "Operação Correnteza",
+  "texto": "Contas novas, dinheiro velho. Feche o caso com duas CTEs : mov (soma e contagem do que cada conta enviou ) e rec (soma do que cada conta recebeu ). Traga titular, tipo, abertura, enviado, recebido (0 quando não houver) e o giro enviado / recebido arredondado em 2 casas como giro , apenas para contas abertas a partir de 2025-01-01 , ordenado pelo enviado, do maior para o menor."
+ },
+ {
+  "arquivo": "revisao-abertura",
+  "grupo": "abertura",
+  "caso": "O Homem Errado",
+  "texto": "O Homem Errado. Revisão criminal · assalto de 19 de setembro de 2024. Tarcísio Boaventura cumpre 19 anos por um assalto em Serra Azul, entre 14h10 e 14h35 do dia 19 de setembro de 2024. Ele sempre disse que estava trabalhando a 200 km dali. A Defensoria conseguiu os dados brutos — ponto eletrônico, pedágio, antenas — e a mecânica se inverte: primeiro você derruba a condenação , depois aponta quem realmente estava lá. Provar ausência em SQL tem ferramentas próprias: NOT EXISTS , INTERSECT , EXCEPT e interseção de intervalos de tempo."
+ },
+ {
+  "arquivo": "revisao-desfecho",
+  "grupo": "desfecho",
+  "caso": "O Homem Errado",
+  "texto": "Caso encerrado. Hermes Caetano Lisboa foi indiciado. A condenação de Tarcísio se apoiou num registro de pedágio da moto dele indo a Serra Azul — de 14 de setembro , cinco dias antes do assalto. No dia 19 ele bateu ponto às 06h02, saiu às 16h11 e o celular dele se registrou numa torre de Vila Redonda às 14h22, doze minutos depois do crime, a 200 km de distância. Hermes Caetano Lisboa, demitido da mesma transportadora oito meses antes, não tinha ponto para bater: cruzou o pedágio às 11h02 rumo a Serra Azul, ficou colado na torre SA-ERB-05 entre 14h18 e 14h41 e voltou às 16h12. Foi o único a fazer o trajeto de ida e volta no mesmo dia."
+ },
+ {
+  "arquivo": "revisao-pista-1",
+  "grupo": "pista",
+  "caso": "O Homem Errado",
+  "texto": "Quem estava batendo ponto. O assalto foi entre 14:10:00 e 14:35:00 do dia 19/09/2024. Monte uma CTE chamada crime com essas duas datas e descubra quem tinha turno aberto naquele intervalo. Traga nome, unidade, entrada e saida , em ordem alfabética de nome."
+ },
+ {
+  "arquivo": "revisao-pista-2",
+  "grupo": "pista",
+  "caso": "O Homem Errado",
+  "texto": "Quem não esteve lá. Prove a ausência. Traga nome e ocupacao das pessoas que não têm nenhum registro de antena em Serra Azul no dia 19/09/2024, em ordem alfabética."
+ },
+ {
+  "arquivo": "revisao-pista-3",
+  "grupo": "pista",
+  "caso": "O Homem Errado",
+  "texto": "Foi e voltou no mesmo dia. Use INTERSECT : traga as placas que passaram pelo pedágio no sentido Serra Azul e também no sentido Vila Redonda no dia 19/09/2024."
+ },
+ {
+  "arquivo": "revisao-pista-4",
+  "grupo": "pista",
+  "caso": "O Homem Errado",
+  "texto": "Quem trocou de cidade. Com LAG() , compare cada registro de antena com o anterior da mesma pessoa e traga apenas os momentos em que a cidade mudou . Colunas: nome, ts, cidade_anterior, cidade , por nome e depois por ts. Considere só o dia 19/09/2024."
+ },
+ {
+  "arquivo": "revisao-pista-5",
+  "grupo": "pista",
+  "caso": "O Homem Errado",
+  "texto": "No local, na hora. Fecho: numa CTE presentes , pegue quem tem registro de antena em Serra Azul entre 13:30:00 e 15:30:00 . Traga nome, ocupacao, placa, modelo e o primeiro horário de pedágio daquele dia como passou_no_pedagio , em ordem alfabética de nome."
+ }
+]
